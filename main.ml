@@ -2,11 +2,15 @@ open Algebra
 open Printf
 
 
-let articles = Table [Col "aid"; Col "title"; Col "body"] ;;
-let votes = Table [Col "aid"; Col "uid"] ;;
-let votes' = Project ([Col "aid"; Col "uid"; Lit ("n", "1")], votes) ;;
-let rating = Table [Col "uid"; Col "aid"; Col "n"] ;;
-let rv = Union (rating, votes') ;;
+let awv_db = new_database ()
+
+let _ =
+    add_table awv_db "articles" [Col "aid"; Col "title"; Col "body"];
+    add_table awv_db "votes" [Col "aid"; Col "uid"];
+    add_table awv_db "ratings" [Col "uid"; Col "aid"; Col "n"]
+
+let votes' = Project ([Col "aid"; Col "uid"; Lit ("n", "1")], Table "votes")
+let rv = Union (Table "ratings", votes')
 
 let awv1 =
     Select (
@@ -14,68 +18,69 @@ let awv1 =
         Group (
             [Count],
             [Col "aid"; Col "title"; Col "body"],
-            Equijoin ([Col "aid"], articles, votes)))
+            Equijoin ([Col "aid"], Table "articles", Table "votes")))
 let awv1' =
     Select (
         [Equal (Col "aid", Param)],
         Group (
             [Count],
             [Col "aid"; Col "title"; Col "body"],
-            Equijoin ([Col "aid"], articles, rv)))
+            Equijoin ([Col "aid"], Table "articles", rv)))
 let awv2 =
     Select (
         [Equal (Col "aid", Param)],
         Equijoin (
             [Col "aid"],
-            articles,
-            Group ([Count], [Col "aid"], votes))) ;;
+            Table "articles",
+            Group ([Count], [Col "aid"], Table "votes")))
 
 let awv2' =
     Select (
         [Equal (Col "aid", Param)],
         Equijoin (
             [Col "aid"],
-            articles,
-            Group ([Sum (Col "n")], [Col "aid"], rv))) ;;
+            Table "articles",
+            Group ([Sum (Col "n")], [Col "aid"], rv)))
 
-assert_valid articles ;;
-assert_valid votes ;;
-assert_valid votes' ;;
-assert_valid rating ;;
-assert_valid rv ;;
-assert_valid awv1 ;;
-assert_valid awv2 ;;
+let _ =
+    assert_valid awv_db (Table "articles");
+    assert_valid awv_db (Table "votes");
+    assert_valid awv_db (Table "ratings");
+    assert_valid awv_db votes';
+    assert_valid awv_db rv;
+    assert_valid awv_db awv1;
+    assert_valid awv_db awv2;
 
-print_endline "articles" ;;
-assert_valid articles ;;
-print_endline "votes" ;;
-print_query_nl votes ;;
-print_endline "votes'" ;;
-print_query_nl votes' ;;
-print_endline "rating" ;;
-print_query_nl rating ;;
-print_endline "rv" ;;
-print_query_nl rv ;;
+    print_endline "articles";
+    print_query_nl awv_db (Table "articles");
+    print_endline "votes";
+    print_query_nl awv_db (Table "votes");
+    print_endline "votes'";
+    print_query_nl awv_db votes';
+    print_endline "ratings";
+    print_query_nl awv_db (Table "ratings");
+    print_endline "rv";
+    print_query_nl awv_db rv;
 
-print_endline "awv1" ;;
-print_query_nl awv1 ;;
-print_endline "awv1 after optimization" ;;
-print_query_nl (optimize awv1) ;;
-print_endline "awv1'" ;;
-print_query_nl awv1' ;;
-print_endline "awv1' after optimization" ;;
-print_query_nl (optimize awv1') ;;
+    print_endline "awv1";
+    print_query_nl awv_db awv1;
+    print_endline "awv1 after optimization";
+    print_query_nl awv_db (optimize awv_db awv1);
+    print_endline "awv1'";
+    print_query_nl awv_db awv1';
+    print_endline "awv1' after optimization";
+    print_query_nl awv_db (optimize awv_db awv1');
 
-print_endline "awv2" ;;
-print_query_nl awv2 ;;
-print_endline "awv2 after optimization" ;;
-print_query_nl (optimize awv2) ;;
-print_endline "awv2'" ;;
-print_query_nl awv2' ;;
-print_endline "awv2' after optimization" ;;
-print_query_nl (optimize awv2') ;;
+    print_endline "awv2";
+    print_query_nl awv_db awv2;
+    print_endline "awv2 after optimization";
+    print_query_nl awv_db (optimize awv_db awv2);
+    print_endline "awv2'";
+    print_query_nl awv_db awv2';
+    print_endline "awv2' after optimization";
+    print_query_nl awv_db (optimize awv_db awv2');
 
-let users = Table [Col "uid"; Col "name"; Col "email"; Col "banned"] ;;
+(*let users = Table [Col "uid"; Col "name"; Col "email"; Col "banned"] ;;
 let comments = Table [Col "aid"; Col "uid"; Col "text"] ;;
 let articles_comments = Equijoin ([Col "uid"], users, comments) ;;
 let article_comments = Select (
@@ -108,3 +113,4 @@ let sample =
                 Select (
                     [Equal (Col "a", Col "b")],
                     Table [Col "a"; Col "b"]))))
+*)
