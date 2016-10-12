@@ -1,0 +1,31 @@
+open Algebra
+open Printf
+
+type named_query = { name : string; query : query } ;;
+
+let contact_info = Table [
+  Col "CI.contact_id"; Col "CI.email";
+  Col "CI.first_name"; Col "CI.last_name";
+  Col "CI.affiliation"; Col "CI.collaborators"
+] ;;
+
+let queries = [
+  { name = "contact_id_by_email";
+    query = Project (
+      [Col "CI.contact_id"],
+      Select ([Equal (Col "CI.email", Param)], contact_info))
+  };
+  {
+    name = "contact_info_basic";
+    query = Project (
+      [Col "CI.first_name"; Col "CI.last_name"; Col "CI.affiliation";
+       Col "CI.collaborators"],
+      Select ([Equal (Col "CI.contact_id", Param)], contact_info))
+  };
+  {
+    name = "contact_info"
+  }
+] ;;
+
+List.iter (fun q -> assert_valid q.query) queries ;
+List.iter (fun q -> print_endline q.name; print_query_nl q.query) queries
