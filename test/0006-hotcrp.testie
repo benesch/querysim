@@ -1,0 +1,6 @@
+%script
+sql_parse
+%stdin
+select value
+from Settings
+where name=?

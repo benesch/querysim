@@ -1,0 +1,7 @@
+%script
+sql_parse
+%stdin
+select name,
+       value,
+       data
+from Settings

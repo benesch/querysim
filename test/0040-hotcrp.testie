@@ -1,0 +1,9 @@
+%script
+sql_parse
+%stdin
+select firstName,
+       lastName,
+       affiliation,
+       collaborators
+from ContactInfo
+where contactId=?

@@ -1,0 +1,11 @@
+%script
+sql_parse
+%stdin
+select firstName,
+       lastName,
+       unaccentedName,
+       email,
+       contactId,
+       roles
+from ContactInfo
+where email like ?

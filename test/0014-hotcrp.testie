@@ -1,0 +1,6 @@
+%script
+sql_parse
+%stdin
+select paperId
+from PaperTag
+where tag=? limit 1

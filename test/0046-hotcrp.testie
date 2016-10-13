@@ -1,0 +1,8 @@
+%script
+sql_parse
+%stdin
+select paperId
+from PaperComment
+where PaperComment.contactId=?
+group by paperId
+order by paperId

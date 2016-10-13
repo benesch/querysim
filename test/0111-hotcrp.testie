@@ -1,0 +1,14 @@
+%script
+sql_parse
+%stdin
+select count(reviewSubmitted) num_submitted,
+       count(if(reviewNeedsSubmit=0,reviewSubmitted,1)) num_needs_submit,
+       group_concat(if(reviewSubmitted is not null,overAllMerit,null)) scores,
+       group_concat(distinct if(reviewNeedsSubmit!=0
+                                and reviewSubmitted is null,reviewRound,null)) unsubmitted_rounds
+from PaperReview
+join Paper using (paperId)
+where (PaperReview.contactId=?)
+  and (reviewSubmitted is not null
+       or timeSubmitted>0)
+group by PaperReview.reviewId>0

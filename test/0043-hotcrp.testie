@@ -1,0 +1,8 @@
+%script
+sql_parse
+%stdin
+select count(*)
+from PaperReview
+where paperId=?
+  and (reviewSubmitted>0
+       or reviewNeedsSubmit>0)

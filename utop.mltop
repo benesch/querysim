@@ -1,2 +1,7 @@
 algebra
+hotcrp
+sql
+sql_lexer
+sql_parse
+sql_parser
 utop

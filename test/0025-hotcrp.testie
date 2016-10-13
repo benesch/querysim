@@ -1,0 +1,6 @@
+%script
+sql_parse
+%stdin
+select count(topicId)
+from TopicInterest
+where contactId=?

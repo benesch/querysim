@@ -1,0 +1,8 @@
+%script
+sql_parse
+%stdin
+select min(Paper.paperId)
+from Paper
+join ContactInfo on (ContactInfo.paperId=Paper.paperId
+                     and ContactInfo.contactId=?
+                     and ContactInfo.conflictType>=?)

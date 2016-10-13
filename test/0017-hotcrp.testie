@@ -1,0 +1,7 @@
+%script
+sql_parse
+%stdin
+select paperId,
+       capVersion
+from Paper
+where paperId=?

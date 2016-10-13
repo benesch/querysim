@@ -1,0 +1,6 @@
+%script
+sql_parse
+%stdin
+select min(Paper.paperId)
+from Paper
+where timeSubmitted>0

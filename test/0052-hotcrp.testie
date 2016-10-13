@@ -1,0 +1,8 @@
+%script
+sql_parse
+%stdin
+select group_concat(' ', tag, '#', tagIndex
+                    order by tag separator '')
+from PaperTag
+where paperId=?
+group by paperId

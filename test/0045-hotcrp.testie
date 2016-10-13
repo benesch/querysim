@@ -1,0 +1,7 @@
+%script
+sql_parse
+%stdin
+select distinct tag
+from PaperTag t
+join Paper p on (p.paperId=t.paperId)
+where p.timeSubmitted>0

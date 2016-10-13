@@ -1,0 +1,6 @@
+%script
+sql_parse
+%stdin
+select distinct tag
+from PaperTag t
+where t.paperId in ?

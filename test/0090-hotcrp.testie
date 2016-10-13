@@ -1,0 +1,14 @@
+%script
+sql_parse
+%stdin
+select Paper.*,
+       PaperConflict.conflictType,
+       null reviewType,
+            null reviewId,
+                 null myReviewType
+from Paper
+left join PaperConflict on (PaperConflict.paperId=Paper.paperId
+                            and PaperConflict.contactId=0)
+where Paper.paperId=?
+group by Paper.paperId
+order by Paper.paperId

@@ -1,0 +1,7 @@
+%script
+sql_parse
+%stdin
+select infoJson
+from PaperStorage
+where paperId=?
+  and paperStorageId=?

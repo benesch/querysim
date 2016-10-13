@@ -1,0 +1,8 @@
+%script
+sql_parse
+%stdin
+select topicId,
+       interest
+from TopicArea
+join TopicInterest using (topicId)
+where contactId=?

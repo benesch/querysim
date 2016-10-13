@@ -1,0 +1,7 @@
+%script
+sql_parse
+%stdin
+select paperId,
+       tag,
+       tagIndex
+from PaperTag

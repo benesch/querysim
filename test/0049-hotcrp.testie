@@ -1,0 +1,10 @@
+%script
+sql_parse
+%stdin
+select contactId
+from ContactInfo
+where roles!=0
+  and (roles&1)!=0
+order by lastName,
+         firstName,
+         email

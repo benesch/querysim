@@ -1,0 +1,61 @@
+%script
+sql_parse
+%stdin
+select u.contactId,
+       firstName,
+       lastName,
+       email,
+       affiliation,
+       roles,
+       contactTags,
+       voicePhoneNumber,
+       u.collaborators,
+       lastLogin,
+       disabled,
+       topicIds,
+       topicInterest,
+       count(if(r.reviewNeedsSubmit<=0,r.reviewSubmitted,r.reviewId)) as numReviews,
+       count(r.reviewSubmitted) as numReviewsSubmitted,
+       sum(r.numRatings) as numRatings,
+       sum(r.sumRatings) as sumRatings,
+       leadPaperIds,
+       numLeads,
+       shepherdPaperIds,
+       numShepherds,
+       group_concat(if(r.reviewSubmitted>0,r.overAllMerit,null)) as overAllMerit
+from ContactInfo u
+left join
+  (select contactId,
+          group_concat(topicId) as topicIds,
+          group_concat(interest) as topicInterest
+   from TopicInterest
+   group by contactId) as ti on (ti.contactId=u.contactId)
+left join
+  (select r.*,
+          count(rating) as numRatings,
+          sum(if(rating>0,1,0)) as sumRatings
+   from PaperReview r
+   join Paper p on (p.paperId=r.paperId)
+   left join ReviewRating rr on (rr.reviewId=r.reviewId)
+   where (p.timeSubmitted>0
+          or r.reviewSubmitted>0)
+   group by r.reviewId) as r on (r.contactId=u.contactId)
+left join
+  (select p.leadContactId,
+          group_concat(p.paperId) as leadPaperIds,
+          count(p.paperId) as numLeads
+   from Paper p
+   where leadContactId is not null
+   group by p.leadContactId) as lead on (lead.leadContactId=u.contactId)
+left join
+  (select p.shepherdContactId,
+          group_concat(p.paperId) as shepherdPaperIds,
+          count(p.paperId) as numShepherds
+   from Paper p
+   where shepherdContactId is not null
+   group by p.shepherdContactId) as shep on (shep.shepherdContactId=u.contactId)
+where (u.roles&1)!=0
+group by u.contactId
+order by lastName,
+         firstName,
+         email

@@ -1,0 +1,7 @@
+%script
+sql_parse
+%stdin
+select contactId,
+       topicId,
+       interest
+from TopicInterest

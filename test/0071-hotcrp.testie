@@ -1,0 +1,13 @@
+%script
+sql_parse
+%stdin
+select PaperReview.contactId,
+       timeRequested,
+       reviewSubmitted,
+       reviewRound,
+       0 conflictType
+from PaperReview
+where reviewType>?
+  or (reviewType=?
+      and timeRequested>0
+      and reviewSubmitted>0)

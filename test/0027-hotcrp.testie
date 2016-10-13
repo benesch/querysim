@@ -1,0 +1,7 @@
+%script
+sql_parse
+%stdin
+select topicId,
+       topicName
+from TopicArea
+order by topicName

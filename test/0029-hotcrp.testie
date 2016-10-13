@@ -1,0 +1,8 @@
+%script
+sql_parse
+%stdin
+select optionId,
+       value,
+       data
+from PaperOption
+where paperId=?

@@ -1,0 +1,8 @@
+%script
+sql_parse
+%stdin
+select PaperStorage.*
+from FilteredDocument
+join PaperStorage on (PaperStorage.paperStorageId=FilteredDocument.outDocId)
+where inDocId=?
+  and FilteredDocument.filterType=?

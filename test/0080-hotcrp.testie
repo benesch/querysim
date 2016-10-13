@@ -1,0 +1,11 @@
+%script
+sql_parse
+%stdin
+select PaperComment.*,
+       firstName reviewFirstName,
+       lastName reviewLastName,
+       email reviewEmail
+from PaperComment
+join ContactInfo on (ContactInfo.contactId=PaperComment.contactId)
+where PaperComment.paperId=?
+order by commentId

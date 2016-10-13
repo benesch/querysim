@@ -1,0 +1,6 @@
+%script
+sql_parse
+%stdin
+select *
+from MailLog
+where mailId=?

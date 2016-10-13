@@ -1,0 +1,8 @@
+%script
+sql_parse
+%stdin
+select topicId,
+       interest
+from TopicInterest
+where contactId=?
+  and interest!=0

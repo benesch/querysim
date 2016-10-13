@@ -1,0 +1,7 @@
+%script
+sql_parse
+%stdin
+select contactId,
+       email
+from ContactInfo
+where email in ?

@@ -1,0 +1,8 @@
+%script
+sql_parse
+%stdin
+select outcome,
+       count(paperId)
+from Paper
+where timeSubmitted>0
+group by outcome

@@ -1,0 +1,55 @@
+%script
+sql_parse
+%stdin
+select u.contactId,
+       firstName,
+       lastName,
+       email,
+       affiliation,
+       roles,
+       contactTags,
+       voicePhoneNumber,
+       u.collaborators,
+       lastLogin,
+       disabled,
+
+  (select group_concat(topicId, ' ', interest)
+   from TopicInterest
+   where contactId=u.contactId) topicInterest,
+       numReviews,
+       numReviewsSubmitted,
+       numRatings,
+       sumRatings,
+
+  (select count(paperId)
+   from Paper
+   where leadContactId=u.contactId) numLeads,
+
+  (select count(paperId)
+   from Paper
+   where shepherdContactId=u.contactId) numShepherds,
+       overAllMerit
+from ContactInfo u
+left join
+  (select contactId,
+          count(if(reviewNeedsSubmit<=0,reviewSubmitted,reviewId)) numReviews,
+          count(reviewSubmitted) numReviewsSubmitted,
+          group_concat(if(reviewSubmitted>0,overAllMerit,null)) overAllMerit
+   from PaperReview r
+   join Paper p on (p.paperId=r.paperId)
+   where (p.timeSubmitted>0
+          or r.reviewSubmitted>0)
+   group by r.contactId) as r on (r.contactId=u.contactId)
+left join
+  (select PaperReview.contactId,
+          count(rating) numRatings,
+          sum(if(rating>0,1,0)) sumRatings
+   from ReviewRating
+   join PaperReview on (PaperReview.paperId=ReviewRating.paperId
+                        and PaperReview.reviewId=ReviewRating.reviewId)
+   group by PaperReview.contactId) as rr on (rr.contactId=u.contactId)
+where u.roles!=0
+  and (u.roles&1)!=0
+order by lastName,
+         firstName,
+         email

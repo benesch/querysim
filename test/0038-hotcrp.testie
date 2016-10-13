@@ -1,0 +1,8 @@
+%script
+sql_parse
+%stdin
+select paperStorageId
+from PaperStorage
+where paperId=?
+  and documentType=?
+  and sha1=?
