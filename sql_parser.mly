@@ -61,6 +61,14 @@ open Sql
 %token USING
 %token WHERE
 
+%left OR
+%left AND
+%left NOT
+%left EQ NEQ GT GTE LT LTE LIKE IN IS
+%left PLUS MINUS
+%left AMPERSAND
+%left SLASH
+
 %%
 
 alias:
@@ -71,38 +79,37 @@ alias_opt:
   | { None }
   | alias { $1 }
 
-bool_exp:
-  | bool_term { $1 }
-  | bool_exp OR bool_term { Binop (Or, $1, $3) }
-
-bool_term:
-  | bool_factor { $1 }
-  | bool_term AND bool_factor { Binop (And, $1, $3) }
-
-bool_factor:
-  | bool_test { $1 }
-  | NOT bool_test { Not $2 }
-
-bool_test:
-  | value_exp comparison value_exp { Binop ($2, $1, $3) }
-  | value_exp IS NULL { Is_null $1 }
-  | value_exp IS NOT NULL { Not (Is_null $1) }
+exp:
+  | LPAREN exp RPAREN { $2 }
+  | LPAREN select RPAREN { Subquery $2 }
+  | exp AND exp { Binop (And, $1, $3) }
+  | exp OR exp { Binop (Or, $1, $3) }
+  | exp EQ exp { Binop (Eq, $1, $3) }
+  | exp NEQ exp { Binop (Neq, $1, $3) }
+  | exp LT exp { Binop (Lt, $1, $3) }
+  | exp LTE exp { Binop (Lte, $1, $3) }
+  | exp GT exp { Binop (Gt, $1, $3) }
+  | exp GTE exp { Binop (Gte, $1, $3) }
+  | exp LIKE exp { Binop (Like, $1, $3) }
+  | exp IN exp { Binop (In, $1, $3) }
+  | exp PLUS exp { Binop (Add, $1, $3) }
+  | exp MINUS exp { Binop (Sub, $1, $3) }
+  | exp SLASH exp { Binop (Div, $1, $3) }
+  | exp AMPERSAND exp { Binop (And, $1, $3) }
+  | exp IS NULL { Is_null $1 }
+  | exp IS NOT NULL { Not (Is_null $1) }
+  | NOT exp { Not $2 }
+  | ID LPAREN arg_list RPAREN { Call ($1, $3) }
+  | col { Col $1 }
   | literal { $1 }
-  | LPAREN bool_exp RPAREN { $2 }
-
-comparison:
-  | EQ { Eq }
-  | NEQ { Neq }
-  | LT { Lt }
-  | LTE { Lte }
-  | GT { Gt }
-  | GTE { Gte }
-  | LIKE { Like }
-  | IN { In }
+  | QMARK { Param }
+  | GROUP_CONCAT LPAREN distinct_opt arg_list order_by separator_opt RPAREN {
+      Call ("group_concat", $4)
+    }
 
 where:
   | { None }
-  | WHERE bool_exp { Some $2 }
+  | WHERE exp { Some $2 }
 
 order:
   | { Asc }
@@ -144,7 +151,7 @@ col_list:
 
 join_cond:
   | { None }
-  | ON bool_exp { Some (Join_exp $2) }
+  | ON exp { Some (Join_exp $2) }
   | USING LPAREN col_list RPAREN { Some (Join_cols $3) }
 
 joined_table:
@@ -172,32 +179,10 @@ literal:
   | FALSE { False }
   | NULL { Null }
 
-operator:
-  | PLUS { Add }
-  | MINUS { Sub }
-  | SLASH { Div }
-  | AMPERSAND { BAnd }
-
 separator_opt:
   | {}
   | SEPARATOR STRING {}
   | SEPARATOR QMARK {}
-
-value_exp:
-  | QMARK { Param }
-  | LPAREN value_exp RPAREN { $2 }
-  | ID LPAREN arg_list RPAREN { Call ($1, $3) }
-  | GROUP_CONCAT LPAREN distinct_opt arg_list order_by separator_opt RPAREN {
-      Call ("group_concat", $4)
-    }
-  | col { Col $1 }
-  | literal { $1 }
-  | value_exp operator value_exp { Binop ($2, $1, $3) }
-  | LPAREN select RPAREN { Subquery $2 }
-
-exp:
-  | value_exp { $1 }
-  | bool_exp { $1 }
 
 derived_col:
   | exp alias_opt { ($1, $2) }
