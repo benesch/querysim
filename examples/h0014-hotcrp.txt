@@ -1,0 +1,3 @@
+select paperId
+from PaperTag
+where tag=? limit 1

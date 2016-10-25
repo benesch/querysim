@@ -1,0 +1,18 @@
+select Paper.paperId,
+       reviewId,
+       reviewType,
+       reviewSubmitted,
+       reviewModified,
+       timeApprovalRequested,
+       reviewNeedsSubmit,
+       reviewRound,
+       reviewOrdinal,
+       timeRequested,
+       PaperReview.contactId,
+       lastName,
+       firstName,
+       email
+from Paper
+join PaperReview using (paperId)
+join ContactInfo on (PaperReview.contactId=ContactInfo.contactId)
+where paperId in ?

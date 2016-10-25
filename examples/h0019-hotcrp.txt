@@ -1,0 +1,3 @@
+select ContactInfo.*
+from ContactInfo
+where contactId=?

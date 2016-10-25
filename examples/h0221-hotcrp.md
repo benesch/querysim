@@ -1,0 +1,78 @@
+
+## HotCRP Query 0221
+```sql
+select u.contactId,
+       firstName,
+       lastName,
+       email,
+       affiliation,
+       roles,
+       contactTags,
+       voicePhoneNumber,
+       u.collaborators,
+       lastLogin,
+       disabled,
+       topicIds,
+       topicInterest,
+       count(if(r.reviewNeedsSubmit<=0,r.reviewSubmitted,r.reviewId)) as numReviews,
+       count(r.reviewSubmitted) as numReviewsSubmitted,
+       sum(r.numRatings) as numRatings,
+       sum(r.sumRatings) as sumRatings,
+       leadPaperIds,
+       numLeads,
+       shepherdPaperIds,
+       numShepherds,
+       group_concat(if(r.reviewSubmitted>0,r.overAllMerit,null)) as overAllMerit
+from ContactInfo u
+left join
+  (select contactId,
+          group_concat(topicId) as topicIds,
+          group_concat(interest) as topicInterest
+   from TopicInterest
+   group by contactId) as ti on (ti.contactId=u.contactId)
+left join
+  (select r.*,
+          count(rating) as numRatings,
+          sum(if(rating>0,1,0)) as sumRatings
+   from PaperReview r
+   join Paper p on (p.paperId=r.paperId)
+   left join PaperConflict pc on (pc.paperId=p.paperId
+                                  and pc.contactId=?)
+   left join ReviewRating rr on (rr.reviewId=r.reviewId
+                                 and not (rr.reviewId in (?)))
+   where (pc.conflictType is null
+          or pc.conflictType=0
+          or r.contactId=?)
+     and (p.timeSubmitted>0
+          or r.reviewSubmitted>0)
+   group by r.reviewId) as r on (r.contactId=u.contactId)
+left join
+  (select p.leadContactId,
+          group_concat(p.paperId) as leadPaperIds,
+          count(p.paperId) as numLeads
+   from Paper p
+   left join PaperConflict pc on (pc.paperId=p.paperId
+                                  and pc.contactId=?)
+   where leadContactId is not null
+     and (conflictType is null
+          or conflictType=0)
+   group by p.leadContactId) as lead on (lead.leadContactId=u.contactId)
+left join
+  (select p.shepherdContactId,
+          group_concat(p.paperId) as shepherdPaperIds,
+          count(p.paperId) as numShepherds
+   from Paper p
+   left join PaperConflict pc on (pc.paperId=p.paperId
+                                  and pc.contactId=?)
+   where shepherdContactId is not null
+     and (conflictType is null
+          or conflictType=0)
+   group by p.shepherdContactId) as shep on (shep.shepherdContactId=u.contactId)
+where u.roles!=0
+  and (u.roles&1)!=0
+group by u.contactId
+order by lastName,
+         firstName,
+         email
+```
+[examples/h0221-hotcrp.md](/examples/h0221-hotcrp.md)

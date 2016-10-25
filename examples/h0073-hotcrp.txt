@@ -1,0 +1,8 @@
+select Paper.paperId paperId,
+       Paper.timeSubmitted timeSubmitted,
+       Paper.timeWithdrawn timeWithdrawn,
+       Paper.outcome outcome
+from Paper
+where true
+  and Paper.timeSubmitted>0
+group by Paper.paperId

@@ -1,0 +1,10 @@
+select ContactInfo.contactId,
+       conflictType,
+       email,
+       firstName,
+       lastName,
+       affiliation
+from PaperConflict
+join ContactInfo using (contactId)
+where paperId=?
+  and conflictType>=?

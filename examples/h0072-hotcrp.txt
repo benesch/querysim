@@ -1,0 +1,7 @@
+select rating,
+       count(PaperReview.reviewId)
+from PaperReview
+join ReviewRating on (PaperReview.contactId=?
+                      and PaperReview.reviewId=ReviewRating.reviewId)
+group by rating
+order by rating desc

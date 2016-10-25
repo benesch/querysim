@@ -1,0 +1,5 @@
+select outcome,
+       count(*)
+from Paper
+where timeSubmitted>0
+group by outcome

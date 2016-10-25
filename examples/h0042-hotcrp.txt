@@ -1,0 +1,5 @@
+select topicId,
+       interest
+from TopicArea
+join TopicInterest using (topicId)
+where contactId=?

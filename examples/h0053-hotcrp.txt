@@ -1,0 +1,9 @@
+select paperStorageId,
+       sha1,
+       timestamp,
+       size,
+       mimetype
+from PaperStorage
+where paperId=?
+  and documentType=?
+  and sha1=?

@@ -1,0 +1,24 @@
+
+## HotCRP Query 0123
+```sql
+select Paper.paperId paperId,
+       Paper.timeSubmitted timeSubmitted,
+       Paper.timeWithdrawn timeWithdrawn,
+       Paper.outcome outcome,
+       PaperConflict.conflictType conflictType,
+       Paper.managerContactId managerContactId,
+       Paper.leadContactId leadContactId,
+
+  (select group_concat(' ', tag, '#', tagIndex separator '')
+   from PaperTag
+   where PaperTag.paperId=Paper.paperId) paperTags
+from Paper
+left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId
+                                             and (PaperConflict.contactId=?))
+where true
+  and (Paper.managerContactId=?
+       or Paper.managerContactId=0)
+  and Paper.timeSubmitted>0
+group by Paper.paperId
+```
+[examples/h0123-hotcrp.md](/examples/h0123-hotcrp.md)

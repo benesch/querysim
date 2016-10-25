@@ -1,0 +1,14 @@
+select paperStorageId,
+       paperId,
+       timestamp,
+       mimetype,
+       mimetypeid,
+       sha1,
+       documentType,
+       filename,
+       infoJson,
+       size,
+       filterType,
+       originalStorageId
+from PaperStorage
+where paperStorageId in ?

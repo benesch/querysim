@@ -1,0 +1,3 @@
+select topicId
+from PaperTopic
+where paperId=?

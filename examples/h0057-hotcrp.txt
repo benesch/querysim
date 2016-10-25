@@ -1,0 +1,7 @@
+select
+  (select max(conflictType)
+   from PaperConflict
+   where contactId=?),
+  (select paperId
+   from PaperReview
+   where contactId=? limit 1)

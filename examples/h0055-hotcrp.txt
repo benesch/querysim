@@ -1,0 +1,7 @@
+select outcome,
+       count(paperId)
+from Paper
+where timeSubmitted>0
+  or (timeSubmitted=?
+      and timeWithdrawn>=?)
+group by outcome

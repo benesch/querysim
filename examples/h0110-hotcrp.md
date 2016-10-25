@@ -1,0 +1,24 @@
+
+## HotCRP Query 0110
+```sql
+select MPR.reviewId
+from PaperReview as MPR
+left join
+  (select paperId,
+          count(reviewId) as numReviews
+   from PaperReview
+   where reviewType>1
+     and reviewNeedsSubmit=0
+   group by paperId) as NPR on (NPR.paperId=MPR.paperId)
+left join
+  (select paperId,
+          count(rating) as numRatings
+   from PaperReview
+   join ReviewRating using (paperId,
+                            reviewId)
+   group by paperId) as NRR on (NRR.paperId=MPR.paperId)
+where MPR.contactId=?
+  and numReviews<=?
+  and numRatings<=?
+```
+[examples/h0110-hotcrp.md](/examples/h0110-hotcrp.md)

@@ -1,0 +1,10 @@
+select reviewId,
+       reviewType,
+       reviewRound,
+       reviewModified,
+       reviewToken,
+       requestedBy,
+       reviewSubmitted
+from PaperReview
+where paperId=?
+  and contactId=?

@@ -1,0 +1,35 @@
+
+## HotCRP Query 0127
+```sql
+select PaperReview.*,
+       ContactInfo.firstName,
+       ContactInfo.lastName,
+       ContactInfo.email,
+       ContactInfo.roles as contactRoles,
+       ContactInfo.contactTags,
+       ReqCI.firstName as reqFirstName,
+       ReqCI.lastName as reqLastName,
+       ReqCI.email as reqEmail,
+
+  (select group_concat(rating)
+   from ReviewRating
+   where paperId=PaperReview.paperId
+     and reviewId=PaperReview.reviewId) allRatings,
+
+  (select rating
+   from ReviewRating
+   where paperId=PaperReview.paperId
+     and reviewId=PaperReview.reviewId
+     and contactId=?) myRating
+from PaperReview
+join ContactInfo using (contactId)
+left join ContactInfo as ReqCI on (ReqCI.contactId=PaperReview.requestedBy)
+where PaperReview.paperId=?
+group by PaperReview.reviewId
+order by PaperReview.paperId,
+         reviewOrdinal,
+         timeRequested,
+         reviewType desc,
+         reviewId
+```
+[examples/h0127-hotcrp.md](/examples/h0127-hotcrp.md)

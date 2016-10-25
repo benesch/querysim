@@ -1,0 +1,4 @@
+select contactId,
+       conflictType
+from PaperConflict
+where paperId=?

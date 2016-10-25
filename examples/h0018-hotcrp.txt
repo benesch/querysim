@@ -1,0 +1,4 @@
+select contactId,
+       topicId,
+       interest
+from TopicInterest

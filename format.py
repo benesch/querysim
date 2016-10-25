@@ -50,6 +50,14 @@ sql_parse
 {% endif %}
 """.strip())
 
+md_template = jinja2.Template("""
+## {{ name }}
+```sql
+{{ query }}
+```
+[{{ filename }}](/{{ filename }})
+""")
+
 def do_html(rows):
     for row in rows:
         row['formatted_query'] = pygments.highlight(
@@ -83,9 +91,30 @@ def do_testie(rows):
         }))
 
 
+def do_examples(rows):
+    outdir = pathlib.Path('examples')
+    if not outdir.exists():
+        outdir.mkdir()
+    else:
+        for f in outdir.glob('h*-hotcrp.{txt,html}'):
+            f.unlink()
+    rows = sorted(rows, key=lambda x: len(x['query']))
+    rows = filter(lambda row: not too_hard(row), rows)
+    for idx, row in enumerate(rows):
+        txtfile = outdir / "h{:04}-hotcrp.txt".format(idx)
+        txtfile.write_text(row['formatted_query'])
+        mdfile = outdir / "h{:04}-hotcrp.md".format(idx)
+        mdfile.write_text(md_template.render({
+            'name': "HotCRP Query {:04}".format(idx),
+            'filename': mdfile,
+            'query': row['formatted_query']
+        }))
+
+
 MODES = {
     'html': do_html,
     'testie': do_testie,
+    'examples': do_examples,
 }
 
 def main():

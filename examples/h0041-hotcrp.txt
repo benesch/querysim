@@ -1,0 +1,6 @@
+select contactId,
+       topicId,
+       interest
+from TopicInterest
+where interest!=0
+order by contactId

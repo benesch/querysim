@@ -1,0 +1,5 @@
+select paperId
+from PaperReview
+where PaperReview.contactId=?
+group by paperId
+order by paperId

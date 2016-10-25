@@ -1,0 +1,7 @@
+select topicId,
+       if(interest>0,1,0),
+       count(*)
+from TopicInterest
+where interest!=0
+group by topicId,
+         interest>0

@@ -1,0 +1,4 @@
+select coalesce(max(reviewOrdinal), 0)
+from PaperReview
+where paperId=?
+group by paperId

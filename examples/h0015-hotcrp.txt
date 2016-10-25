@@ -1,0 +1,3 @@
+select paperId
+from PaperReview
+where reviewId=?

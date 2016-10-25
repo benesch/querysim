@@ -1,0 +1,4 @@
+select infoJson
+from PaperStorage
+where paperId=?
+  and paperStorageId=?

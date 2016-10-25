@@ -1,0 +1,5 @@
+select topicId,
+       interest
+from TopicInterest
+where contactId=?
+  and interest!=0

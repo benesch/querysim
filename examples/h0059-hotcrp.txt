@@ -1,0 +1,11 @@
+select firstName,
+       lastName,
+       affiliation,
+       email,
+       contactId,
+       roles,
+       contactTags,
+       disabled
+from ContactInfo
+where roles!=0
+  and (roles&1)!=0

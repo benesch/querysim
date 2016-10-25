@@ -1,0 +1,4 @@
+select topicId,
+       topicName
+from TopicArea
+order by topicName

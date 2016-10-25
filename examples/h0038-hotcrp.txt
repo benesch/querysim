@@ -1,0 +1,5 @@
+select paperStorageId
+from PaperStorage
+where paperId=?
+  and documentType=?
+  and sha1=?

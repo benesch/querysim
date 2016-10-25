@@ -1,0 +1,34 @@
+
+## HotCRP Query 0160
+```sql
+select Paper.paperId paperId,
+       Paper.timeSubmitted timeSubmitted,
+       Paper.timeWithdrawn timeWithdrawn,
+       Paper.outcome outcome,
+       Paper.managerContactId managerContactId,
+       Paper.leadContactId leadContactId,
+       count(Tag_1.tag) Tag_1_ct,
+       count(Tag_2.tag) Tag_2_ct,
+       PaperConflict.conflictType conflictType,
+       MyReview.reviewType myReviewType,
+       MyReview.reviewNeedsSubmit myReviewNeedsSubmit,
+       MyReview.reviewSubmitted myReviewSubmitted,
+
+  (select group_concat(' ', tag, '#', tagIndex separator '')
+   from PaperTag
+   where PaperTag.paperId=Paper.paperId) paperTags
+from Paper
+left join PaperTag as Tag_1 on (Tag_1.paperId=Paper.paperId
+                                and (Tag_1.tag=?))
+left join PaperTag as Tag_2 on (Tag_2.paperId=Paper.paperId
+                                and (Tag_2.tag=?))
+left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId
+                                             and (PaperConflict.contactId=?))
+left join PaperReview as MyReview on (MyReview.paperId=Paper.paperId
+                                      and ((MyReview.contactId=?)))
+where ((Tag_1.tag is not null)
+       and (Tag_2.tag is not null))
+  and Paper.timeSubmitted>0
+group by Paper.paperId
+```
+[examples/h0160-hotcrp.md](/examples/h0160-hotcrp.md)

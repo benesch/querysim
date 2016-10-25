@@ -1,0 +1,6 @@
+select Paper.paperId,
+       authorInformation
+from Paper
+join PaperConflict on (PaperConflict.paperId=Paper.paperId
+                       and PaperConflict.contactId=?
+                       and PaperConflict.conflictType>=?)

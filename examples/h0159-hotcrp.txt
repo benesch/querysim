@@ -1,0 +1,26 @@
+select ContactInfo.contactId,
+       PaperConflict.conflictType,
+       PaperReview.reviewType,
+       coalesce(preference,0) as reviewerPreference,
+       expertise as reviewerExpertise,
+       coalesce(allReviews,'') as allReviews,
+       coalesce(PRR.paperId,0) as refused
+from ContactInfo
+left join PaperConflict on (PaperConflict.contactId=ContactInfo.contactId
+                            and PaperConflict.paperId=?)
+left join PaperReview on (PaperReview.contactId=ContactInfo.contactId
+                          and PaperReview.paperId=?)
+left join PaperReviewPreference on (PaperReviewPreference.contactId=ContactInfo.contactId
+                                    and PaperReviewPreference.paperId=?)
+left join
+  (select PaperReview.contactId,
+          group_concat(reviewType separator '') as allReviews
+   from PaperReview
+   join Paper on (Paper.paperId=PaperReview.paperId
+                  and timeWithdrawn<=0)
+   group by PaperReview.contactId) as AllReviews on (AllReviews.contactId=ContactInfo.contactId)
+left join PaperReviewRefused PRR on (PRR.paperId=?
+                                     and PRR.contactId=ContactInfo.contactId)
+where ContactInfo.roles!=0
+  and (ContactInfo.roles&1)!=0
+group by ContactInfo.contactId

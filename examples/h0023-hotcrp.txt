@@ -1,0 +1,4 @@
+select contactId,
+       email
+from ContactInfo
+where email in ?

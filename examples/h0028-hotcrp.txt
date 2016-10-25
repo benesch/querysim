@@ -1,0 +1,3 @@
+select reviewId
+from PaperReview
+where reviewRound=0 limit 1

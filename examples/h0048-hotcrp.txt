@@ -1,0 +1,5 @@
+select contactId,
+       count(preference)
+from PaperReviewPreference
+where preference!=0
+group by contactId

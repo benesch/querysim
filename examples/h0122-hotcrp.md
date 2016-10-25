@@ -1,0 +1,27 @@
+
+## HotCRP Query 0122
+```sql
+select Paper.paperId,
+       reviewType,
+       reviewId,
+       reviewModified,
+       reviewSubmitted,
+       timeApprovalRequested,
+       reviewNeedsSubmit,
+       reviewOrdinal,
+       reviewBlind,
+       PaperReview.contactId reviewContactId,
+       requestedBy,
+       reviewToken,
+       reviewRound,
+       conflictType
+from Paper
+left join PaperReview on (PaperReview.paperId=Paper.paperId
+                          and PaperReview.contactId=?)
+left join PaperConflict on (PaperConflict.paperId=Paper.paperId
+                            and PaperConflict.contactId=?)
+where Paper.paperId in (?)
+  and (PaperReview.contactId is not null
+       or PaperConflict.contactId is not null)
+```
+[examples/h0122-hotcrp.md](/examples/h0122-hotcrp.md)

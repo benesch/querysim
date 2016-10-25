@@ -1,0 +1,4 @@
+select reviewRound,
+       count(*)
+from PaperReview
+group by reviewRound

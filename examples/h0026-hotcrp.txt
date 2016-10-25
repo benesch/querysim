@@ -1,0 +1,3 @@
+select min(Paper.paperId)
+from Paper
+where timeSubmitted>0

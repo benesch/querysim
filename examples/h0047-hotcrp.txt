@@ -1,0 +1,7 @@
+select firstName,
+       lastName,
+       '' affiliation,
+          email,
+          contactId
+from ContactInfo
+where contactId in ?

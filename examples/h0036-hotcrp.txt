@@ -1,0 +1,4 @@
+select requestedBy
+from PaperReview
+where requestedBy=?
+  and contactId!=? limit 1

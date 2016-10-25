@@ -1,0 +1,26 @@
+
+## HotCRP Query 0125
+```sql
+select Paper.paperId paperId,
+       Paper.timeSubmitted timeSubmitted,
+       Paper.timeWithdrawn timeWithdrawn,
+       Paper.outcome outcome,
+       Paper.title title,
+       Paper.managerContactId managerContactId,
+       Paper.leadContactId leadContactId,
+       PaperConflict.conflictType conflictType,
+       MyReview.reviewType myReviewType,
+       MyReview.reviewNeedsSubmit myReviewNeedsSubmit,
+       MyReview.reviewSubmitted myReviewSubmitted,
+       Paper.abstract abstract
+from Paper
+left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId
+                                             and (PaperConflict.contactId=?))
+left join PaperReview as MyReview on (MyReview.paperId=Paper.paperId
+                                      and ((MyReview.contactId=?)))
+where ((true)
+       or (true))
+  and Paper.timeSubmitted>0
+group by Paper.paperId
+```
+[examples/h0125-hotcrp.md](/examples/h0125-hotcrp.md)

@@ -1,0 +1,10 @@
+select u.contactId,
+       group_concat(r.reviewType separator '')
+from ContactInfo u
+left join PaperReview r on (r.contactId=u.contactId)
+left join Paper p on (p.paperId=r.paperId)
+where p.timeWithdrawn<=0
+  and p.timeSubmitted>0
+  and u.roles!=0
+  and (u.roles&1)!=0
+group by u.contactId

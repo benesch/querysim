@@ -1,0 +1,4 @@
+select name,
+       value,
+       data
+from Settings
