@@ -72,5 +72,5 @@ rule lex = parse
 | '&'        { AMPERSAND }
 | id as id   { try Hashtbl.find keywords (String.uppercase id)
                with Not_found -> ID id }
-| '\'' strchr* as str '\'' { STRING str }
+| '\'' (strchr* as str) '\'' { STRING str }
 | eof        { EOF }

@@ -1,6 +1,6 @@
-BINTARGETS = bin/main bin/sql_parse
+BINTARGETS = bin/awv bin/hotcrp bin/sql_parse bin/test
 
 include rules.mk
 
-check: bin/sql_parse
-	./testie -p bin test
+check: bin/sql_parse bin/test
+	bin/test && ./testie -p bin test

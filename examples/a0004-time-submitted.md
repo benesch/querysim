@@ -1,23 +1,28 @@
+## Time submitted thoughts
 
-## HotCRP Query 0021
+**[examples/h0021-hotcrp.md](/examples/h0021-hotcrp.md)**
+
 ```sql
 select paperId
 from Paper
 where timeSubmitted>0 limit 1
 ```
-[examples/h0021-hotcrp.md](/examples/h0021-hotcrp.md)
 
+(Isn't this an arbitrary paper?)
 
-## HotCRP Query 0026
+**[examples/h0026-hotcrp.md](/examples/h0026-hotcrp.md)**
+
 ```sql
 select min(Paper.paperId)
 from Paper
 where timeSubmitted>0
 ```
-[examples/h0026-hotcrp.md](/examples/h0026-hotcrp.md)
 
+(This should just be materialized.)
 
-## HotCRP Query 0034
+**[examples/h0034-hotcrp.md](/examples/h0034-hotcrp.md)**
+**[examples/h0037-hotcrp.md](/examples/h0037-hotcrp.md)**
+
 ```sql
 select outcome,
        count(*)
@@ -25,31 +30,24 @@ from Paper
 where timeSubmitted>0
 group by outcome
 ```
-[examples/h0034-hotcrp.md](/examples/h0034-hotcrp.md)
 
+(Materialize.)
 
-## HotCRP Query 0037
-```sql
-select outcome,
-       count(paperId)
-from Paper
-where timeSubmitted>0
-group by outcome
-```
-[examples/h0037-hotcrp.md](/examples/h0037-hotcrp.md)
+**[examples/h0045-hotcrp.md](/examples/h0045-hotcrp.md)**
 
-
-## HotCRP Query 0045
 ```sql
 select distinct tag
 from PaperTag t
 join Paper p on (p.paperId=t.paperId)
 where p.timeSubmitted>0
 ```
-[examples/h0045-hotcrp.md](/examples/h0045-hotcrp.md)
+
+This actually becomes a join over the previous query when selections
+are pushed down.
+
+**[examples/h0055-hotcrp.md](/examples/h0055-hotcrp.md)**
 
 
-## HotCRP Query 0055
 ```sql
 select outcome,
        count(paperId)
@@ -59,7 +57,6 @@ where timeSubmitted>0
       and timeWithdrawn>=?)
 group by outcome
 ```
-[examples/h0055-hotcrp.md](/examples/h0055-hotcrp.md)
 
 
 ## HotCRP Query 0065

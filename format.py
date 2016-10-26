@@ -111,10 +111,21 @@ def do_examples(rows):
         }))
 
 
+def do_ml(rows):
+    rows = sorted(rows, key=lambda x: len(x['query']))
+    rows = filter(lambda row: not too_hard(row), rows)
+    print("[")
+    for idx, row in enumerate(rows):
+        if idx > 0:
+            print(";\n  ", end="")
+        print('"{}"'.format(row['query']), end="")
+    print("]")
+
 MODES = {
     'html': do_html,
     'testie': do_testie,
     'examples': do_examples,
+    'ml': do_ml,
 }
 
 def main():

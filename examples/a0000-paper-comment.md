@@ -1,4 +1,4 @@
-## PaperComment thoughts
+  ## PaperComment thoughts
 
 **[examples/h0046-hotcrp.md](/examples/h0046-hotcrp.md)**
 ```sql
