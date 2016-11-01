@@ -1,0 +1,90 @@
+
+
+(* let queries_equal (q1 : query) (q2: query) = match (q1, q2) with
+    | (Table c1, Table c2) -> cols_equal c1 c2
+    | (Select (p1, q1'), (p2, q2')) ->  *)
+
+(* let rec valid_select_exp (cs : col list) (e : exp) = match e with
+  | Lit _ | Param -> true
+  | Col c -> List.mem c cs
+  | Binop (b, e1, e2) -> valid_select_exp cs e1 && valid_select_exp cs e2
+  | Call (func, es) -> List.for_all (valid_select_exp cs) es
+
+let rec valid_join_exp (cs : col list) (e : exp) = match e with
+  | Param -> false
+  | Lit _ -> true
+  | Col c -> List.mem c cs
+  | Binop (b, e1, e2) -> valid_join_exp cs e1 && valid_join_exp cs e2
+  | Call (func, es) -> List.for_all (valid_join_exp cs) es
+
+let valid_proj (cs : col list) (p : proj) =
+  valid_join_exp cs p.pexp
+
+let rec valid_query (db : database) = function
+  | Stored s -> Hashtbl.mem db s
+  | Table (name, cs) -> true
+  | Select (e, q) ->
+      let cs = cols db q in
+      valid_select_exp cs e && valid_query db q
+  | Project (ps, q) ->
+      let cs = cols db q in
+      List.for_all (valid_proj cs) ps && valid_query db q
+  | Union (q1, q2) ->
+      let q1cs = cols db q1 in
+      let q2cs = cols db q2 in
+      valid_query db q1 && valid_query db q2 && cols_equal q1cs q2cs
+  | Join (e, q1, q2) ->
+      let q1cs = cols db q1 in
+      let q2cs = cols db q2 in
+      valid_join_exp (q1cs @ q2cs) e && valid_query db q1 && valid_query db q2
+  | Group (aggs, cs, q) ->
+      let qcs = cols db q in
+      List.for_all (fun c -> List.mem c qcs) cs &&
+      List.for_all (function Count -> true | Sum c | Min c | Max c -> List.mem c qcs) aggs &&
+      valid_query db q
+
+let assert_valid (db : database) (q : query) = assert (valid_query db q)
+let assert_invalid (db : database) (q : query) = assert (not (valid_query db q))
+
+let _ = assert_valid
+    (db_with_table "tb" ["a"; "b"])
+    (Stored "tb")
+
+let _ = assert_invalid
+    (db_with_table "badtb" [])
+    (Stored "goodtb")
+
+let _ = assert_valid
+    (db_with_table "tb" ["a"; "b"])
+    (Select (Binop (Eq, Col "a", Col "b"), Stored "tb"))
+
+let _ = assert_invalid
+    (db_with_table "tb" ["a"; "b"])
+    (Select (Binop (Eq, Col "a", Col "c"), Stored "tb"))
+
+let _ = assert_valid
+    (db_with_table "tb" ["a"; "b"; "c"])
+    (Project (
+      [{pexp = Col "c"; alias = None}; {pexp = Col "b"; alias = None}],
+      Stored "tb"))
+
+let _ = assert_invalid
+    (db_with_table "tb" ["a"; "b"; "c"])
+    (Project (
+      [{pexp = Col "c"; alias = None}; {pexp = Col "d"; alias = None}],
+      Stored "tb"))
+
+let _ = assert_invalid
+    (let db = new_database () in
+        add_table db "a" ["a"];
+        add_table db "b" ["b"];
+        db)
+    (Union (Stored "a", Stored "b"))
+
+let _ = assert_valid
+    (db_with_table "tb" ["a"])
+    (Group ([Sum "a"], [], Stored "tb"))
+
+let _ = assert_invalid
+    (db_with_table "tb" ["a"])
+    (Group ([Sum "b"], [], Stored "tb")) *)

@@ -70,7 +70,7 @@ rule lex = parse
 | '-'        { MINUS }
 | '/'        { SLASH }
 | '&'        { AMPERSAND }
-| id as id   { try Hashtbl.find keywords (String.uppercase id)
+| id as id   { try Hashtbl.find keywords (String.uppercase_ascii id)
                with Not_found -> ID id }
 | '\'' (strchr* as str) '\'' { STRING str }
 | eof        { EOF }

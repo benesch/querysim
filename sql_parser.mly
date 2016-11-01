@@ -1,12 +1,12 @@
 %{
-open Sql
+open Sql_types
 %}
 
 %start query
 %start query_list
 
-%type <Sql.query> query
-%type <Sql.query list> query_list
+%type <Sql_types.query> query
+%type <Sql_types.query list> query_list
 
 %token EOF
 %token <float> FLOAT

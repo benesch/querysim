@@ -28,3 +28,4 @@ let suite = "expressions" >:::
    "test_exps_equal1" >:: test_exps_equal1;
    "test_exps_equal2" >:: test_exps_equal2;
    "test_exps_equal3" >:: test_exps_equal3]
+

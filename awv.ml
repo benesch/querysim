@@ -1,84 +1,71 @@
 open Algebra
 open Printf
 
-let awv_db = new_database ()
+let db = new_database ()
 
 let _ =
-  add_table awv_db "articles" ["aid"; "title"; "body"];
-  add_table awv_db "votes" ["aid"; "uid"];
-  add_table awv_db "ratings" ["uid"; "aid"; "n"]
+  add_table db "articles" ["aid"; "title"; "body"];
+  add_table db "votes" ["aid"; "uid"];
+  add_table db "ratings" ["uid"; "aid"; "n"]
 
 let votes' = Project (
-  [{pexp = Col "aid"; alias = None};
-   {pexp = Col "uid"; alias = None};
-   {pexp = Lit "1"; alias = Some "n"}],
-  Table "votes")
-let rv = Union (Table "ratings", votes')
+  [{proj_exp = Col (0, 1); proj_alias = None};
+   {proj_exp = Col (0, 0); proj_alias = None};
+   {proj_exp = Lit "1";    proj_alias = Some "n"}],
+  Stored "votes")
+
+let rv = Union (Stored "ratings", votes')
 
 let awv1 =
     Select (
-        Binop (Eq, Col "aid", Param),
+        Binop (Eq, Col (0, 0), Param),
         Group (
-            [Count],
-            ["aid"; "title"; "body"],
-            Join (Col "aid", Table "articles", Table "votes")))
+            Count,
+            [(0, 0); (0, 1); (0, 2)],
+            Join ([((0, 0), (1, 0))], Stored "articles", Stored "votes")))
 
 let awv1' =
     Select (
-        Binop (Eq, Col "aid", Param),
+        Binop (Eq, Col (0, 0), Param),
         Group (
-            [Count],
-            ["aid"; "title"; "body"],
-            Join (Col "aid", Table "articles", rv)))
+            Count,
+            [(0, 0); (0, 1); (0, 2)],
+            Join ([((1, 1), (0, 0))], Stored "articles", rv)))
+
 let awv2 =
     Select (
-        Binop (Eq, Col "aid", Param),
+        Binop (Eq, Col (0, 0), Param),
         Join (
-            Col "aid",
-            Table "articles",
-            Group ([Count], ["aid"], Table "votes")))
+            [((0, 0), (1, 0))],
+            Stored "articles",
+            Group (Count, [(0, 0)], Stored "votes")))
 
 let awv2' =
     Select (
-        Binop (Eq, Col "aid", Param),
+        Binop (Eq, Col (0, 0), Param),
         Join (
-            Col "aid",
-            Table "articles",
-            Group ([Sum "n"], ["aid"], rv)))
+            [((0, 0), (1, 0))],
+            Stored "articles",
+            Group (Sum (0, 2), [(0, 1)], rv)))
+
 let _ =
-    assert_valid awv_db (Table "articles");
-    assert_valid awv_db (Table "votes");
-    assert_valid awv_db (Table "ratings");
-    assert_valid awv_db votes';
-    assert_valid awv_db rv;
-    assert_valid awv_db awv1;
-    assert_valid awv_db awv2;
+(*  assert_valid db (Stored "articles");
+    assert_valid db (Stored "votes");
+    assert_valid db (Stored "ratings");
+    assert_valid db votes';
+    assert_valid db rv;
+    assert_valid db awv1;
+    assert_valid db awv2; *)
+    Soup.show_info db "articles" (database_lookup db "articles");
+    Soup.show_info db "votes" (database_lookup db "votes");
+    Soup.show_info db "votes'" votes';
+    Soup.show_info db "ratings" (database_lookup db "ratings");
+    Soup.show_info db "awv1" awv1;
+    Soup.show_info db "awv1 optimized" (optimize db awv1);
+    Soup.show_info db "awv1'" awv1';
+    Soup.show_info db "awv1' optimized" (optimize db awv1');
+    Soup.show_info db "awv2" awv2;
+    Soup.show_info db "awv2 optimized" (optimize db awv2);
+    Soup.show_info db "awv2'" awv2';
+    Soup.show_info db "awv2' optimized" (optimize db awv2');
 
-    print_endline "articles";
-    print_query_nl awv_db (Table "articles");
-    print_endline "votes";
-    print_query_nl awv_db (Table "votes");
-    print_endline "votes'";
-    print_query_nl awv_db votes';
-    print_endline "ratings";
-    print_query_nl awv_db (Table "ratings");
-    print_endline "rv";
-    print_query_nl awv_db rv;
-
-    print_endline "awv1";
-    print_query_nl awv_db awv1;
-    print_endline "awv1 after optimization";
-    print_query_nl awv_db (optimize awv_db awv1);
-    print_endline "awv1'";
-    print_query_nl awv_db awv1';
-    print_endline "awv1' after optimization";
-    print_query_nl awv_db (optimize awv_db awv1');
-
-    print_endline "awv2";
-    print_query_nl awv_db awv2;
-    print_endline "awv2 after optimization";
-    print_query_nl awv_db (optimize awv_db awv2);
-    print_endline "awv2'";
-    print_query_nl awv_db awv2';
-    print_endline "awv2' after optimization";
-    print_query_nl awv_db (optimize awv_db awv2');

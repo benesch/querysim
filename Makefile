@@ -1,4 +1,9 @@
-BINTARGETS = bin/awv bin/hotcrp bin/sql_parse bin/test
+BINTARGETS = \
+	bin/awv \
+	bin/awv2 \
+	bin/hotcrp \
+	bin/sql_parse \
+	bin/test
 
 include rules.mk
 

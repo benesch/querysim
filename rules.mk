@@ -1,5 +1,7 @@
 OCAMLBUILD = ocamlbuild
-OCAMLBUILDFLAGS = -use-ocamlfind -pkg batteries -pkg ppx_deriving.std -pkg ounit -cflags -warn-error,-a+8 -tag debug
+OCAMLBUILDFLAGS = \
+	-use-ocamlfind -cflags -warn-error,-a+8 -tag debug \
+	-pkg batteries -pkg ppx_deriving.std -pkg ounit -pkg yojson
 SRCS = $(wildcard *.ml *.ml[ily])
 
 all: _build/utop.top $(BINTARGETS)
