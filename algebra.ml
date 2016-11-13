@@ -156,6 +156,9 @@ let database_map f db =
   let view_names = toposorted_view_names db in
   List.map (fun name -> f name (database_lookup db name)) view_names
 
+let database_mutate f db =
+  database_map (fun name query -> update_query db name (f query)) db
+
 let col_of_agg = function
   | Count -> None
   | Sum col | Min col | Max col -> Some col
@@ -315,6 +318,24 @@ let json_of_query db name query =
     let right = Array.make (max2 + 1) (`Int 0) in
     List.iteri (fun i ((_, j1), (_, j2)) -> left.(j1) <- (`Int (i + 1)); right.(j2) <- (`Int (i + 1))) cols;
     `List [`List (Array.to_list left); `List (Array.to_list right)] in
+  let json_of_projs projs =
+    let extract_col p = match p.proj_exp with
+      | Col (ti, ci) -> assert (ti = 0); `Int ci
+      | _ -> failwith "eep! non-column projection"
+    in
+    `List (List.map extract_col projs)
+  in
+  let join_col_order db (cols, query1, query2) =
+    let mentioned_cols =
+      List.flatten (List.map (fun (c1, c2) -> [c1; c2]) cols)
+    in
+    let left_col_names = col_names db query1 in
+    let right_col_names = col_names db query2 in
+    List.mapi (fun i _ -> `List [`Int 0; `Int i]) left_col_names
+      @ BatList.filteri_map (fun i _ ->
+          if (List.mem (1, i) mentioned_cols) then None
+          else Some (`List [`Int 1; `Int i])) right_col_names
+  in
   let agg_func = function
     | Count -> `String "COUNT"
     | Sum _ -> `String "SUM"
@@ -323,7 +344,19 @@ let json_of_query db name query =
   let agg_col = function
     | Count -> `Null
     | Sum c | Min c | Max c -> `Int (snd c) in
-  match query with
+  let rustify (`Assoc a) =
+    let (name, a) = Util.pop_assoc "name" a in
+    let (type_, a) = Util.pop_assoc "type" a in
+    let type_ = match type_ with `String t -> t | _ -> failwith "bad type" in
+    let (outputs, a) = Util.pop_assoc "outputs" a in
+    `Assoc [("name", name); ("outputs", outputs); (type_, `Assoc a)]
+  in
+  let rustify (`Assoc a) =
+    let (type_, a) = Util.pop_assoc "type" a in
+    let type_ = match type_ with `String t -> t | _ -> failwith "bad type" in
+    `Assoc [(type_, `Assoc a)]
+  in
+  rustify (match query with
     | Table names -> `Assoc
         [("name", `String name);
          ("type", `String "Base");
@@ -331,22 +364,24 @@ let json_of_query db name query =
     | Stored s -> `Assoc
         [("name", `String name);
          ("type", `String "Alias");
-         ("from", `List [`String s])]
+         ("from", `String s)]
     | Select (exp, query') -> `Assoc
         [("name", `String name);
          ("type", `String "Identity");
-         ("from", `List [snag_name query']);
+         ("from", snag_name query');
          ("outputs", col_names' db query);
          ("having", json_of_exp exp)]
     | Project (projs, query') -> `Assoc
         [("name", `String name);
-         ("type", `String "Identity");
-         ("from", `List [snag_name query']);
+         ("type", `String "Permute");
+         ("from", snag_name query');
+         ("emit", json_of_projs projs);
          ("outputs", col_names' db query)]
     | Join (cols, query1, query2) -> `Assoc
         [("name", `String name);
          ("type", `String "Join");
          ("from", `List [snag_name query1; snag_name query2]);
+         ("emit", `List (join_col_order db (cols, query1, query2)));
          ("on", json_of_join_cols cols);
          ("outputs", col_names' db query)]
     | Union (query1, query2) -> `Assoc
@@ -357,11 +392,11 @@ let json_of_query db name query =
     | Group (agg, cols, query') -> `Assoc
         [("name", `String name);
          ("type", `String "Group");
-         ("from", `List [snag_name query']);
+         ("from", snag_name query');
          ("func", agg_func agg);
          ("over", agg_col agg);
          ("by", `List (List.map (fun (i, j) -> `Int j )cols));
-         ("outputs", col_names' db query)]
+         ("outputs", col_names' db query)])
 
 
 let print_col db col = print_string (string_of_col db col)
@@ -484,16 +519,31 @@ let push_groups db q = q
  *)
 let prune_projs db q = q
 
-let rec normalize (db : database) = function
+let rec strip_redundant_projs db =
+  let f = strip_redundant_projs in
+  function
   | Stored s -> Stored s
   | Table cols -> Table cols
-  | Select (e, q) -> Select (e, normalize db q)
-  | Union (q1, q2) -> Union (normalize db q1, normalize db q2)
-  | Join (cs, q1, q2) -> Join (cs, normalize db q1, normalize db q2)
-  | Project (cs, q) -> Project (cs, normalize db q)
+  | Select (e, q) -> Select (e, f db q)
+  | Union (q1, q2) -> Union (f db q1, f db q2)
+  | Join (cs, q1, q2) -> Join (cs, f db q1, f db q2)
+  | Project (cs, q') as q ->
+    if col_names db q  = col_names db q' then q'
+    else q
   | Group (aggs, cs, q) -> Group (aggs, cs, q)
 
-let optimize db q = normalize db (prune_projs db (push_groups db (push_selects db q)))
+let optimizations = [
+  push_selects;
+  push_groups;
+  prune_projs;
+  strip_redundant_projs;
+]
+
+let optimize_query db q =
+  List.fold_left (fun q opt_fn -> opt_fn db q) q optimizations
+
+let optimize_db db =
+  database_mutate (optimize_query db) db
 
 let rec algebra_of_from db f =
   let rec inner f = match f with

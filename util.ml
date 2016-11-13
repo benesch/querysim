@@ -11,3 +11,11 @@ let rec findi i pred = function
   | hd :: tl -> if pred hd then i else findi (i + 1) pred tl
 
 let findi pred = findi 0 pred
+
+let rec pop_assoc k = function
+  | [] -> raise Not_found
+  | (k', v) as pair :: l ->
+      if compare k k' = 0 then (v, l) else begin
+        let (v, l) = pop_assoc k l in
+        (v, pair :: l)
+      end

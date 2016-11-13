@@ -1,6 +1,8 @@
 BINTARGETS = \
 	bin/awv \
 	bin/awv2 \
+	bin/awv3 \
+	bin/awv_simple \
 	bin/hotcrp \
 	bin/sql_parse \
 	bin/test
