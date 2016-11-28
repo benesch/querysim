@@ -5,10 +5,7 @@ module Hashtbl = BatHashtbl
 type name = string
 type func = string
 
-(* XXX: All literals are represented as strings, and coerced to other
- * data types as necessary. This matches Soup v2's behavior, but may
- * prove limiting. *)
-type lit = string
+type lit = Str of string | Int of int
 
 (* For both sanity and interoperability with Soup v2, a column reference
  * is a pair of ints, with the first int identifying the subquery and
@@ -29,7 +26,7 @@ type binop = Eq | Neq | And | Or | Gt | Lt | Gte | Lte
 
 type exp =
   | Col of col
-  | Lit of string
+  | Lit of lit
   | Param
   | Binop of binop * exp * exp
   | Call of func * exp list
@@ -157,7 +154,7 @@ let database_map f db =
   List.map (fun name -> f name (database_lookup db name)) view_names
 
 let database_mutate f db =
-  database_map (fun name query -> update_query db name (f query)) db
+  database_iter (fun name query -> update_query db name (f query)) db
 
 let col_of_agg = function
   | Count -> None
@@ -242,16 +239,16 @@ let string_of_binop = function
   | Gte -> ">="
   | Lte -> "<="
 
-let rec string_of_exp ?(string_of_col=string_of_col) names = function
+let rec string_of_exp names = function
   | Col c -> string_of_col names c
-  | Lit l -> "\"" ^ l ^ "\""
+  | Lit l -> (match l with Str s -> "\"" ^ s ^ "\"" | Int i -> string_of_int i)
   | Param -> "?"
   | Binop (b, e1, e2) ->
       sprintf "(%s %s %s)"
-      (string_of_exp ~string_of_col names e1) (string_of_binop b) (string_of_exp ~string_of_col names e2)
+      (string_of_exp names e1) (string_of_binop b) (string_of_exp names e2)
   | Call (func, es) ->
       sprintf "%s(%s)"
-      func (String.concat ", " (List.map (string_of_exp ~string_of_col names) es))
+      func (String.concat ", " (List.map (string_of_exp names) es))
 
 let string_of_proj names = function
   | {proj_alias = Some a; proj_exp = e} ->
@@ -296,109 +293,6 @@ let string_of_query (db : database) =
         (make_indent depth) (f (depth + 1) q)
   in f 1
 
-let json_of_query db name query =
-  let snag_name query = match query with
-    | Stored s -> `String s
-    | _ -> failwith "eep! unsplit query encountered during json conversion" in
-  (* XXX: Next bit is horrible. Whatever. It'll change anyway because
-   * string representation of expressions would require annoying
-   * parsing on the Soup end. *)
-  let json_of_exp exp =
-    `String (string_of_exp
-      ~string_of_col:(fun ?qualify _ (i, j) -> string_of_int j)
-      [] exp) in
-  let json_of_string_list strings =
-    `List (List.map (fun s -> `String s) strings) in
-  let col_names' db query =
-    json_of_string_list (col_names db query) in
-  let json_of_join_cols cols =
-    let max1, max2 = List.fold_left (fun (max1, max2) ((_, j1), (_, j2)) ->
-      (max max1 j1, max max2 j2)) (0, 0) cols in
-    let left = Array.make (max1 + 1) (`Int 0) in
-    let right = Array.make (max2 + 1) (`Int 0) in
-    List.iteri (fun i ((_, j1), (_, j2)) -> left.(j1) <- (`Int (i + 1)); right.(j2) <- (`Int (i + 1))) cols;
-    `List [`List (Array.to_list left); `List (Array.to_list right)] in
-  let json_of_projs projs =
-    let extract_col p = match p.proj_exp with
-      | Col (ti, ci) -> assert (ti = 0); `Int ci
-      | _ -> failwith "eep! non-column projection"
-    in
-    `List (List.map extract_col projs)
-  in
-  let join_col_order db (cols, query1, query2) =
-    let mentioned_cols =
-      List.flatten (List.map (fun (c1, c2) -> [c1; c2]) cols)
-    in
-    let left_col_names = col_names db query1 in
-    let right_col_names = col_names db query2 in
-    List.mapi (fun i _ -> `List [`Int 0; `Int i]) left_col_names
-      @ BatList.filteri_map (fun i _ ->
-          if (List.mem (1, i) mentioned_cols) then None
-          else Some (`List [`Int 1; `Int i])) right_col_names
-  in
-  let agg_func = function
-    | Count -> `String "COUNT"
-    | Sum _ -> `String "SUM"
-    | Min _ -> `String "MIN"
-    | Max _ -> `String "MAX" in
-  let agg_col = function
-    | Count -> `Null
-    | Sum c | Min c | Max c -> `Int (snd c) in
-  let rustify (`Assoc a) =
-    let (name, a) = Util.pop_assoc "name" a in
-    let (type_, a) = Util.pop_assoc "type" a in
-    let type_ = match type_ with `String t -> t | _ -> failwith "bad type" in
-    let (outputs, a) = Util.pop_assoc "outputs" a in
-    `Assoc [("name", name); ("outputs", outputs); (type_, `Assoc a)]
-  in
-  let rustify (`Assoc a) =
-    let (type_, a) = Util.pop_assoc "type" a in
-    let type_ = match type_ with `String t -> t | _ -> failwith "bad type" in
-    `Assoc [(type_, `Assoc a)]
-  in
-  rustify (match query with
-    | Table names -> `Assoc
-        [("name", `String name);
-         ("type", `String "Base");
-         ("outputs", json_of_string_list names)]
-    | Stored s -> `Assoc
-        [("name", `String name);
-         ("type", `String "Alias");
-         ("from", `String s)]
-    | Select (exp, query') -> `Assoc
-        [("name", `String name);
-         ("type", `String "Identity");
-         ("from", snag_name query');
-         ("outputs", col_names' db query);
-         ("having", json_of_exp exp)]
-    | Project (projs, query') -> `Assoc
-        [("name", `String name);
-         ("type", `String "Permute");
-         ("from", snag_name query');
-         ("emit", json_of_projs projs);
-         ("outputs", col_names' db query)]
-    | Join (cols, query1, query2) -> `Assoc
-        [("name", `String name);
-         ("type", `String "Join");
-         ("from", `List [snag_name query1; snag_name query2]);
-         ("emit", `List (join_col_order db (cols, query1, query2)));
-         ("on", json_of_join_cols cols);
-         ("outputs", col_names' db query)]
-    | Union (query1, query2) -> `Assoc
-        [("name", `String name);
-         ("type", `String "Union");
-         ("from", `List [snag_name query1; snag_name query2]);
-         ("outputs", col_names' db query)]
-    | Group (agg, cols, query') -> `Assoc
-        [("name", `String name);
-         ("type", `String "Group");
-         ("from", snag_name query');
-         ("func", agg_func agg);
-         ("over", agg_col agg);
-         ("by", `List (List.map (fun (i, j) -> `Int j )cols));
-         ("outputs", col_names' db query)])
-
-
 let print_col db col = print_string (string_of_col db col)
 let print_cols db cols = print_string (string_of_cols db cols)
 let print_proj db proj = print_string (string_of_proj db proj)
@@ -416,9 +310,6 @@ let print_database db =
   database_iter
     (fun name query -> print_info db name query; printf "\n")
     db
-
-let json_of_database db =
-  `List (database_map (fun name query -> json_of_query db name query) db)
 
 (* XXX: This is hilariously far from perfect, but it'll do for simple
    cases. *)
@@ -449,7 +340,44 @@ let rec has_param = function
   | Binop (b, e1, e2) -> has_param e1 || has_param e2
   | Call (func, es) -> List.exists has_param es
 
-(* let rec push_selects (db : database) = function
+(*let rec push_groups (db : database) = function
+    | Table t -> Table t
+    | Select (ps, q) -> Select (ps, push_groups db q)
+    | Project (cs, q) -> Project (cs, push_groups db q)
+    | Union (q1, q2) -> Union (push_groups db q1, push_groups db q2)
+    | Equijoin (cs, q1, q2) -> Equijoin (cs, push_groups db q1, push_groups db q2)
+    | Group (aggs, cs, q) ->
+        let has_lit_one c cs = match c with
+            | Col c -> List.exists (function Lit (n, "1") -> c = n | _ -> false) cs
+            | Lit (n, v) -> v = "1"
+            | Param -> failwith "unexpected param"
+        in
+        let qcs = cols db q in
+        let aggs = List.map (fun agg -> match agg with
+            | Sum c -> if has_lit_one c qcs then Count else agg
+            | _ as agg -> agg) aggs
+        in
+        match q with
+            | Table _ | Project _ | Equijoin _ | Select _ | Group _ -> Group (aggs, cs, q)
+            | Union (q1, q2) -> Union (Group (aggs, cs, q1), Group (aggs, cs, q2)) *)
+
+(* let rec prune_projs (db : database) = function
+    | Table cols -> Table cols
+    | Stored name -> prune_projs db (database_lookup db name)
+    | Select (ps, q) -> Select (ps, prune_projs db q)
+    | Project (cs, q) -> Project (cs, prune_projs db q)
+    | Union (q1, q2) -> Union (prune_projs db q1, prune_projs db q2)
+    | Join (cs, q1, q2) -> Join (cs, prune_projs db q1, prune_projs db q2)
+    | Group (agg, cs, q) -> match q with
+        | Project (cs', q') ->
+            let gcs = match col_of_agg agg with
+              | None -> cs
+              | Some col -> col :: cs
+            in
+            Group (agg, cs, Project (gcs, q'))
+        | _ -> Group (agg, cs, q)
+
+let rec push_selects db = function
     | Table t -> Table t
     | Select (ps, q) ->
         let (stayps, pushps) = List.partition (has_param) ps in
@@ -476,48 +404,63 @@ let rec has_param = function
     | Union (q1, q2) -> Union (push_selects db q1, push_selects db q2)
     | Equijoin (cs, q1, q2) -> Equijoin (cs, push_selects db q1, push_selects db q2)
     | Group (aggs, cs, q) -> Group (aggs, cs, push_selects db q)
-
-let rec push_groups (db : database) = function
-    | Table t -> Table t
-    | Select (ps, q) -> Select (ps, push_groups db q)
-    | Project (cs, q) -> Project (cs, push_groups db q)
-    | Union (q1, q2) -> Union (push_groups db q1, push_groups db q2)
-    | Equijoin (cs, q1, q2) -> Equijoin (cs, push_groups db q1, push_groups db q2)
-    | Group (aggs, cs, q) ->
-        let has_lit_one c cs = match c with
-            | Col c -> List.exists (function Lit (n, "1") -> c = n | _ -> false) cs
-            | Lit (n, v) -> v = "1"
-            | Param -> failwith "unexpected param"
-        in
-        let qcs = cols db q in
-        let aggs = List.map (fun agg -> match agg with
-            | Sum c -> if has_lit_one c qcs then Count else agg
-            | _ as agg -> agg) aggs
-        in
-        match q with
-            | Table _ | Project _ | Equijoin _ | Select _ | Group _ -> Group (aggs, cs, q)
-            | Union (q1, q2) -> Union (Group (aggs, cs, q1), Group (aggs, cs, q2)) *)
-
-let push_selects db q = q
-let push_groups db q = q
-
-(* let rec prune_projs (db : database) = function
-    | Table cols -> Table cols
-    | Stored name -> prune_projs db (database_lookup db name)
-    | Select (ps, q) -> Select (ps, prune_projs db q)
-    | Project (cs, q) -> Project (cs, prune_projs db q)
-    | Union (q1, q2) -> Union (prune_projs db q1, prune_projs db q2)
-    | Join (cs, q1, q2) -> Join (cs, prune_projs db q1, prune_projs db q2)
-    | Group (agg, cs, q) -> match q with
-        | Project (cs', q') ->
-            let gcs = match col_of_agg agg with
-              | None -> cs
-              | Some col -> col :: cs
-            in
-            Group (agg, cs, Project (gcs, q'))
-        | _ -> Group (agg, cs, q)
  *)
-let prune_projs db q = q
+
+let rec push_selects db =
+  let f = push_selects in
+  function
+  | Stored s -> Stored s
+  | Table cols -> Table cols
+  | Select (e, q) ->
+      (* XXX: Do push here. *)
+      Select (e, f db q)
+  | Union (q1, q2) -> Union (f db q1, f db q2)
+  | Join (cs, q1, q2) -> Join (cs, f db q1, f db q2)
+  | Project (cs, q) -> Project (cs, f db q)
+  | Group (aggs, cs, q) -> Group (aggs, cs, q)
+
+let partition_select exp =
+  let rec inner = function
+    | Binop (And, e1, e2) ->
+        let l1, r1 = inner e1 in
+        let l2, r2 = inner e2 in
+        (l1 @ l2, r1 @ r2)
+    | (Binop (Eq, Param, _) as q)
+    | (Binop (Eq, _, Param) as q) ->
+        ([q], [])
+    | Binop (Eq, _, _) as q ->
+        ([], [q])
+    | _ -> failwith "complicated select; eep!"
+  in
+  let fold = function
+    | [] -> None
+    | hd :: tl -> Some (List.fold_left (fun memo binop -> Binop (And, binop, memo)) hd tl)
+  in
+  let l, r = inner exp in
+  (fold l, fold r)
+
+
+let rec strip_param_selects db =
+  let f = strip_param_selects in
+  function
+  | Stored s -> Stored s
+  | Table cols -> Table cols
+  | Select (e, q) ->
+      let (param_exp, nonparam_exp) = partition_select e in
+      (match nonparam_exp with
+        | None -> f db q
+        | Some e -> Select (e, f db q))
+  | Union (q1, q2) -> Union (f db q1, f db q2)
+  | Join (cs, q1, q2) -> Join (cs, f db q1, f db q2)
+  | Project (cs, q') -> Project (cs, f db q')
+  | Group (aggs, cs, q) -> Group (aggs, cs, q)
+
+let simple_project =
+  List.for_all (fun p -> match p.proj_exp with Col _ -> true | _ -> false)
+
+let proj_columns =
+  List.map
+    (fun p -> match p.proj_exp with Col (_, c) -> c | _ -> failwith "nonsimple project")
 
 let rec strip_redundant_projs db =
   let f = strip_redundant_projs in
@@ -527,16 +470,36 @@ let rec strip_redundant_projs db =
   | Select (e, q) -> Select (e, f db q)
   | Union (q1, q2) -> Union (f db q1, f db q2)
   | Join (cs, q1, q2) -> Join (cs, f db q1, f db q2)
-  | Project (cs, q') as q ->
-    if col_names db q  = col_names db q' then q'
-    else q
+  | Project (ps, q') as q ->
+      if simple_project ps then q'
+      else Project (ps, f db q')
   | Group (aggs, cs, q) -> Group (aggs, cs, q)
 
+(* module ColMap = Map.Make(col) *)
+
+(* let rec strip_permutions db =
+  let f = strip_permutions in
+  function
+  | Stored s -> (Stored s, ColMap.empty)
+  | Table cols -> (Table cols, ColMap.empty)
+  | Select (e, q) ->
+      let (q', map) = f db q in
+      (Select (e, q'), map)
+  | Union (q1, q2) ->
+      XXX: Unions are not currently capable of handling this.
+      Union (q1, q2)
+  | Join (cs, q1, q2) ->
+      Join (cs, f db q1, f db q2)
+  | Project (ps, q') as q ->
+      let simple = List.for_all (fun p -> match p.proj_exp with Col _ -> true | _ -> false) ps in
+      if simple then 
+      else Project (ps, q')
+  | Group (aggs, cs, q)
+ *)
+
 let optimizations = [
-  push_selects;
-  push_groups;
-  prune_projs;
   strip_redundant_projs;
+  strip_param_selects;
 ]
 
 let optimize_query db q =
@@ -600,18 +563,18 @@ and algebra_of_exp qual_names e : exp =
         Col (0, Util.findi (fun (tbl, col) -> tbl = t && col = c) qn)
     | Sql.Col {Sql.table = None; Sql.col = c} ->
         Col (0, Util.findi (fun (tbl, col) -> col = c) qn)
-    | Sql.Str s -> Lit s
-    | Sql.Int i -> Lit (string_of_int i)
+    | Sql.Str s -> Lit (Str s)
+    | Sql.Int i -> Lit (Int i)
     | Sql.Binop (op, e1, e2) ->
         Binop (algebra_of_op op, algebra_of_exp qn e1, algebra_of_exp qn e2)
     | Sql.Call (func, es) ->
         Call (func, List.map (algebra_of_exp qn) es)
     | Sql.Is_null e ->
-        Binop (Eq, algebra_of_exp qn e, Lit "")
+        Binop (Eq, algebra_of_exp qn e, Lit (Str ""))
     | Sql.Not (Sql.Is_null e) ->
-        Binop (Neq, algebra_of_exp qn e, Lit "")
-    | Sql.True -> Lit "true"
-    | Sql.Null -> Lit "null"
+        Binop (Neq, algebra_of_exp qn e, Lit (Str ""))
+    | Sql.True -> Lit (Str "true")
+    | Sql.Null -> Lit (Str "null")
     | _ -> failwith "unsupported exp"
 
 and algebra_of_proj qual_names (exp, alias) =

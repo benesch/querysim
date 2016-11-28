@@ -288,7 +288,7 @@ let queries = [
   "select * from Formula order by lower(name)";
   "select paperId, tag, tagIndex from PaperTag";
   "select * from ContactInfo where contactId=?";
-  "select * from ContactInfo where contactDbId=?";
+(* "select * from ContactInfo where contactDbId=?"; *)
   "select topicId from PaperTopic where paperId=?";
   "select email from ContactInfo where contactId=?";
   "select contactId from ContactInfo where email=?";
@@ -297,15 +297,15 @@ let queries = [
   "select paperId from PaperConflict where contactId=?";
   "select paperId, capVersion from Paper where paperId=?";
   "select contactId, topicId, interest from TopicInterest";
-  "select ContactInfo.* from ContactInfo where contactId=?";
+(* "select ContactInfo.* from ContactInfo where contactId=?"; *)
   "select paperId from Paper where leadContactId=? limit 1";
   "select paperId from Paper where timeSubmitted>0 limit 1";
   "select distinct tag from PaperTag t where t.paperId  in ?";
   "select contactId, email from ContactInfo where email in ?";
   "select paperId from Paper where managerContactId=? limit 1";
   "select count(topicId) from TopicInterest where contactId=?";
-  "select min(Paper.paperId) from Paper where timeSubmitted>0";
-  "select topicId, topicName from TopicArea order by topicName";
+(*   "select min(Paper.paperId) from Paper where timeSubmitted>0"; *)
+(* "select topicId, topicName from TopicArea order by topicName"; *)
   "select reviewId from PaperReview where reviewRound=0 limit 1";
   "select optionId, value, data from PaperOption where paperId=?";
   "select topicId, interest from TopicInterest where contactId=?";
@@ -315,87 +315,87 @@ let queries = [
   "select outcome, count(*) from Paper where timeSubmitted>0 group by outcome";
   "select topicId, interest from TopicInterest where contactId=? and interest!=0";
   "select requestedBy from PaperReview where requestedBy=? and contactId!=? limit 1";
-  "select outcome, count(paperId) from Paper where timeSubmitted>0 group by outcome";
+(* "select outcome, count(paperId) from Paper where timeSubmitted>0 group by outcome"; *)
   "select paperStorageId from PaperStorage where paperId=? and documentType=? and sha1=?";
-  "select coalesce(max(reviewOrdinal), 0) from PaperReview where paperId=? group by paperId";
+(* "select coalesce(max(reviewOrdinal), 0) from PaperReview where paperId=? group by paperId"; *)
   "select firstName, lastName, affiliation, collaborators from ContactInfo where contactId=?";
   "select contactId, topicId, interest from TopicInterest where interest!=0 order by contactId";
   "select topicId, interest from TopicArea join TopicInterest using (topicId) where contactId=?";
   "select count(*) from PaperReview where paperId=? and (reviewSubmitted>0 or reviewNeedsSubmit>0)";
   "select paperId from PaperReview where PaperReview.contactId=? group by paperId order by paperId";
-  "select distinct tag from PaperTag t join Paper p on (p.paperId=t.paperId) where p.timeSubmitted>0";
+(*   "select distinct tag from PaperTag t join Paper p on (p.paperId=t.paperId) where p.timeSubmitted>0"; *)
   "select paperId from PaperComment where PaperComment.contactId=? group by paperId order by paperId";
-  "select firstName, lastName, '' affiliation, email, contactId from ContactInfo where contactId in ?";
+(* "select firstName, lastName, '' affiliation, email, contactId from ContactInfo where contactId in ?"; *)
   "select contactId, count(preference) from PaperReviewPreference where preference!=0 group by contactId";
   "select contactId from ContactInfo where roles!=0 and (roles&1)!=0 order by lastName, firstName, email";
   "select firstName, lastName, unaccentedName, email, contactId, roles from ContactInfo where email like ?";
-  "select topicId, if(interest>0,1,0), count(*) from TopicInterest where interest!=0 group by topicId, interest>0";
-  "select group_concat(' ', tag, '#', tagIndex order by tag separator '') from PaperTag where paperId=? group by paperId";
+(*   "select topicId, if(interest>0,1,0), count(*) from TopicInterest where interest!=0 group by topicId, interest>0"; *)
+(*   "select group_concat(' ', tag, '#', tagIndex order by tag separator '') from PaperTag where paperId=? group by paperId"; *)
   "select paperStorageId, sha1, timestamp, size, mimetype from PaperStorage where paperId=? and documentType=? and sha1=?";
   "select ContactInfo.contactId, conflictType, email from PaperConflict join ContactInfo using (contactId) where paperId=?";
   "select outcome, count(paperId) from Paper where timeSubmitted>0 or (timeSubmitted=? and timeWithdrawn>=?) group by outcome";
   "select firstName, lastName, affiliation, email, contactId, roles, contactTags, disabled from ContactInfo where (roles&1)!=0";
-  (* "select (select max(conflictType) from PaperConflict where contactId=?), (select paperId from PaperReview where contactId=? limit 1)"; *)
-  "select count(ta.topicId), count(ti.topicId) from TopicArea ta left join TopicInterest ti on (ti.contactId=? and ti.topicId=ta.topicId)";
+(* "select (select max(conflictType) from PaperConflict where contactId=?), (select paperId from PaperReview where contactId=? limit 1)"; *)
+(* "select count(ta.topicId), count(ti.topicId) from TopicArea ta left join TopicInterest ti on (ti.contactId=? and ti.topicId=ta.topicId)"; *)
   "select firstName, lastName, affiliation, email, contactId, roles, contactTags, disabled from ContactInfo where roles!=0 and (roles&1)!=0";
   "select reviewId, reviewType, reviewRound, reviewModified, reviewToken, requestedBy, reviewSubmitted from PaperReview where paperId=? and contactId=?";
-  "select paperId from PaperReview where reviewType>? and timeRequested>timeRequestNotified and reviewSubmitted is null and reviewNeedsSubmit!=0 limit 1";
-  (* "select (select max(conflictType) from PaperConflict where contactId=?), (select paperId from PaperReview where contactId=? or reviewToken in ? limit 1)"; *)
-  "select min(Paper.paperId) from Paper join ContactInfo on (ContactInfo.paperId=Paper.paperId and ContactInfo.contactId=? and ContactInfo.conflictType>=?)";
-  "select min(Paper.paperId) from Paper join ContactInfo on (ContactInfo.paperId=Paper.paperId and ContactInfo.contactId=0 and ContactInfo.conflictType>=?)";
-  "select r.reviewId from PaperReview r join Paper p on (p.paperId=r.paperId and p.timeSubmitted>0) where (r.contactId=?) and r.reviewNeedsSubmit!=0 limit 1";
-  "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome from Paper where true group by Paper.paperId";
-  "select PaperStorage.* from FilteredDocument join PaperStorage on (PaperStorage.paperStorageId=FilteredDocument.outDocId) where inDocId=? and FilteredDocument.filterType=?";
-  "select ContactInfo.contactId, conflictType, email, firstName, lastName, affiliation from PaperConflict join ContactInfo using (contactId) where paperId=? and conflictType>=?";
-  "select Paper.paperId, authorInformation from Paper join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=? and PaperConflict.conflictType>=?)";
-  "select paperStorageId, paperId, timestamp, mimetype, mimetypeid, sha1, documentType, filename, infoJson, size, filterType, originalStorageId from PaperStorage where paperStorageId in ?";
-  "select PaperReview.contactId, timeRequested, reviewSubmitted, reviewRound, 0 conflictType from PaperReview where reviewType>? or (reviewType=? and timeRequested>0 and reviewSubmitted>0)";
-  "select rating, count(PaperReview.reviewId) from PaperReview join ReviewRating on (PaperReview.contactId=? and PaperReview.reviewId=ReviewRating.reviewId) group by rating order by rating desc";
-  "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome from Paper where true and Paper.timeSubmitted>0 group by Paper.paperId";
-  "select paperStorageId, paperId, timestamp, mimetype, mimetypeid, sha1, documentType, filename, infoJson, size, filterType, originalStorageId from PaperStorage where paperId=? and paperStorageId in ?";
-  "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome from Paper where (Paper.paperId in (?)) and Paper.timeSubmitted>0 group by Paper.paperId";
-  "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome from Paper where (Paper.outcome in (?)) and Paper.timeSubmitted>0 group by Paper.paperId";
-  "select PaperComment.*, firstName reviewFirstName, lastName reviewLastName, email reviewEmail from PaperComment join ContactInfo on (ContactInfo.contactId=PaperComment.contactId) where commentId=? order by commentId";
-  "select PaperReview.*, ContactInfo.firstName, ContactInfo.lastName, ContactInfo.email from PaperReview join ContactInfo on (ContactInfo.contactId=PaperReview.contactId) where PaperReview.paperId=? order by reviewOrdinal";
-  "select distinct tag from PaperTag t join Paper p on (p.paperId=t.paperId) left join PaperConflict pc on (pc.paperId=t.paperId and pc.contactId=?) where p.timeSubmitted>0 and (p.managerContactId=? or pc.conflictType is null)";
-  "select PaperComment.*, firstName reviewFirstName, lastName reviewLastName, email reviewEmail from PaperComment join ContactInfo on (ContactInfo.contactId=PaperComment.contactId) where PaperComment.paperId=? order by commentId";
-  "select u.contactId, firstName, lastName, email, affiliation, roles, contactTags, voicePhoneNumber, u.collaborators, lastLogin, disabled from ContactInfo u where u.roles!=0 and (u.roles&1)!=0 order by lastName, firstName, email";
-  "select ContactInfo.contactId, count(reviewId) from ContactInfo left join PaperReview on (PaperReview.contactId=ContactInfo.contactId and PaperReview.reviewType>=?) where roles!=0 and (roles&1)!=0 group by ContactInfo.contactId";
-  (* "select ContactInfo.contactDbId, Conferences.confid, roles, password from ContactInfo left join Conferences on (Conferences.`dbname`=?) left join Roles on (Roles.contactDbId=ContactInfo.contactDbId and Roles.confid=Conferences.confid) where email=?"; *)
-  "select u.contactId, firstName, lastName, email, affiliation, roles, contactTags, voicePhoneNumber, u.collaborators, lastLogin, disabled from ContactInfo u where u.roles!=0 and (u.roles&1)!=0 group by u.contactId order by lastName, firstName, email";
-  "select distinct tag from PaperTag t join Paper p on (p.paperId=t.paperId) left join PaperConflict pc on (pc.paperId=t.paperId and pc.contactId=?) where p.timeSubmitted>0 and (p.managerContactId=0 or p.managerContactId=? or pc.conflictType is null)";
-  "select count(reviewId) num_submitted, group_concat(overAllMerit) scores from ContactInfo left join PaperReview on (PaperReview.contactId=ContactInfo.contactId and PaperReview.reviewSubmitted is not null) where (roles&1)!=0 group by ContactInfo.contactId";
-  "select ContactInfo.contactId, firstName, lastName, email, preferredEmail, password, roles, disabled, contactTags, conflictType, 0 myReviewType from ContactInfo join PaperConflict using (contactId) where paperId=? and conflictType>=? group by ContactInfo.contactId";
-  "select Paper.paperId, count(pc.contactId) from Paper join PaperConflict c on (c.paperId=Paper.paperId and c.contactId=? and c.conflictType>=?) join PaperConflict pc on (pc.paperId=Paper.paperId and pc.conflictType>=?) group by Paper.paperId order by Paper.paperId";
-  "select count(reviewId) num_submitted, group_concat(overAllMerit) scores from ContactInfo left join PaperReview on (PaperReview.contactId=ContactInfo.contactId and PaperReview.reviewSubmitted is not null) where roles!=0 and (roles&1)!=0 group by ContactInfo.contactId";
-  "select Paper.*, PaperConflict.conflictType, null reviewType, null reviewId, null myReviewType from Paper left join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=0) where Paper.paperId=? group by Paper.paperId order by Paper.paperId";
-  "select name, ReviewRequest.email, firstName as reqFirstName, lastName as reqLastName, ContactInfo.email as reqEmail, requestedBy, reason, reviewRound from ReviewRequest join ContactInfo on (ContactInfo.contactId=ReviewRequest.requestedBy) where ReviewRequest.paperId=?";
-  "select u.contactId, group_concat(r.reviewType separator '') from ContactInfo u left join PaperReview r on (r.contactId=u.contactId) left join Paper p on (p.paperId=r.paperId) where p.timeWithdrawn<=0 and p.timeSubmitted>0 and u.roles!=0 and (u.roles&1)!=0 group by u.contactId";
-  "select name, ReviewRequest.email, firstName as reqFirstName, lastName as reqLastName, ContactInfo.email as reqEmail, requestedBy, reason, reviewRound from ReviewRequest join ContactInfo on (ContactInfo.contactId=ReviewRequest.requestedBy) where ReviewRequest.paperId=? and requestedBy=?";
-  (* "select u.contactId, firstName, lastName, email, affiliation, roles, contactTags, voicePhoneNumber, u.collaborators, lastLogin, disabled, (select group_concat(paperId) from PaperConflict where contactId=u.contactId and conflictType>=?) paperIds from ContactInfo u group by u.contactId order by lastName, firstName, email"; *)
-  "select Paper.paperId, reviewId, reviewType, reviewSubmitted, reviewModified, timeApprovalRequested, reviewNeedsSubmit, reviewRound, reviewOrdinal, timeRequested, PaperReview.contactId, lastName, firstName, email from Paper join PaperReview using (paperId) join ContactInfo on (PaperReview.contactId=ContactInfo.contactId) where paperId in ?";
-  "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome, PaperConflict.conflictType conflictType from Paper left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId and (PaperConflict.contactId=?)) where true and PaperConflict.conflictType>=? group by Paper.paperId";
-  "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome, PaperConflict.conflictType conflictType from Paper left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId and (PaperConflict.contactId=0)) where true and PaperConflict.conflictType>=? group by Paper.paperId";
-  "select ContactInfo.contactId, PaperConflict.conflictType, reviewType, reviewModified, reviewId from ContactInfo left join PaperConflict on (PaperConflict.contactId=ContactInfo.contactId and PaperConflict.paperId=?) left join PaperReview on (PaperReview.contactId=ContactInfo.contactId and PaperReview.paperId=?) where ContactInfo.roles!=0 and (ContactInfo.roles&1)!=0";
-  "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome, PaperConflict.conflictType conflictType from Paper left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId and (PaperConflict.contactId=0)) where true and (PaperConflict.conflictType>=? or Paper.paperId=?) group by Paper.paperId";
-  "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome, PaperConflict.conflictType conflictType from Paper left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId and (PaperConflict.contactId=?)) where true and (PaperConflict.conflictType>=? or Paper.paperId=?) group by Paper.paperId";
-  (* "select Paper.*, PaperConflict.conflictType, null reviewType, null reviewId, null myReviewType, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds from Paper left join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=0) where Paper.paperId=? group by Paper.paperId order by Paper.paperId"; *)
-  "select PRP.paperId, PRP.contactId, PRP.preference from PaperReviewPreference PRP join ContactInfo c on (c.contactId=PRP.contactId and c.roles!=0 and (c.roles&1)!=0) join Paper P on (P.paperId=PRP.paperId) left join PaperConflict PC on (PC.paperId=PRP.paperId and PC.contactId=PRP.contactId) where PRP.preference<=? and coalesce(PC.conflictType,0)<=0 and P.timeWithdrawn<=0 limit 1";
-  (* "select Paper.*, PaperConflict.conflictType, null reviewType, null reviewId, null myReviewType, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds from Paper left join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=0) where Paper.paperId in (?) group by Paper.paperId order by Paper.paperId"; *)
-  (* "select Paper.*, PaperConflict.conflictType, null reviewType, null reviewId, null myReviewType, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds from Paper join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=? and PaperConflict.conflictType>=?) group by Paper.paperId order by Paper.paperId"; *)
-  "select PRP.paperId, PRP.contactId, PRP.preference from PaperReviewPreference PRP join ContactInfo c on (c.contactId=PRP.contactId and (c.roles&1)!=0) join Paper P on (P.paperId=PRP.paperId) left join PaperConflict PC on (PC.paperId=PRP.paperId and PC.contactId=PRP.contactId) where PRP.preference<=? and coalesce(PC.conflictType,0)<=0 and P.timeWithdrawn<=0 and P.timeSubmitted>0 limit 1";
-  (* "select conflictType as conflict_type, reviewType as review_type, reviewSubmitted as review_submitted, reviewNeedsSubmit as review_needs_submit, PaperReview.contactId as review_token_cid, ? contactId from (select ? paperId) P left join PaperReview on (PaperReview.paperId=P.paperId and (PaperReview.contactId=?)) left join PaperConflict on (PaperConflict.paperId=? and PaperConflict.contactId=?)"; *)
-  (* "select conflictType as conflict_type, reviewType as review_type, reviewSubmitted as review_submitted, reviewNeedsSubmit as review_needs_submit, PaperReview.contactId as review_token_cid, ? contactId from (select 1 paperId) P left join PaperReview on (PaperReview.paperId=P.paperId and (PaperReview.contactId=?)) left join PaperConflict on (PaperConflict.paperId=? and PaperConflict.contactId=?)"; *)
-  "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome, PaperConflict.conflictType conflictType from Paper left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId and (PaperConflict.contactId=?)) where true and (PaperConflict.conflictType>=? or Paper.paperId=? or Paper.paperId=?) group by Paper.paperId";
-  "select PRP.paperId, PRP.contactId, PRP.preference from PaperReviewPreference PRP join ContactInfo c on (c.contactId=PRP.contactId and c.roles!=0 and (c.roles&1)!=0) join Paper P on (P.paperId=PRP.paperId) left join PaperConflict PC on (PC.paperId=PRP.paperId and PC.contactId=PRP.contactId) where PRP.preference<=? and coalesce(PC.conflictType,0)<=0 and P.timeWithdrawn<=0 and P.timeSubmitted>0 limit 1";
-  "select MPR.reviewId from PaperReview as MPR left join (select paperId, count(reviewId) as numReviews from PaperReview where reviewType>1 and reviewNeedsSubmit=0 group by paperId) as NPR on (NPR.paperId=MPR.paperId) left join (select paperId, count(rating) as numRatings from PaperReview join ReviewRating using (paperId,reviewId) group by paperId) as NRR on (NRR.paperId=MPR.paperId) where MPR.contactId=? and numReviews<=? and numRatings<=?";
-  "select count(reviewSubmitted) num_submitted, count(if(reviewNeedsSubmit=0,reviewSubmitted,1)) num_needs_submit, group_concat(if(reviewSubmitted is not null,overAllMerit,null)) scores, group_concat(distinct if(reviewNeedsSubmit!=0 and reviewSubmitted is null,reviewRound,null)) unsubmitted_rounds from PaperReview join Paper using (paperId) where (PaperReview.contactId=?) and (reviewSubmitted is not null or timeSubmitted>0) group by PaperReview.reviewId>0";
-  "select any_newpcrev, any_lead, any_shepherd from (select PaperReview.paperId any_newpcrev from PaperReview where reviewType>=? and reviewSubmitted is null and reviewNeedsSubmit!=0 and timeRequested>timeRequestNotified limit 1) a left join (select paperId any_lead from Paper where timeSubmitted>0 and leadContactId!=0 limit 1) b on (true) left join (select paperId any_shepherd from Paper where timeSubmitted>0 and shepherdContactId!=0 limit 1) c on (true)";
-  "select p.paperId, pt.paperTags, r.reviewType from Paper p left join (select paperId, group_concat(' ', tag, '#', tagIndex order by tag separator '') as paperTags from PaperTag where tag  in ? group by paperId) as pt on (pt.paperId=p.paperId) left join PaperReview r on (r.paperId=p.paperId and r.contactId=?) left join PaperConflict pc on (pc.paperId=p.paperId and pc.contactId=?) where p.timeSubmitted>0 and (pc.conflictType is null or p.managerContactId=?)";
-  (* "select conflictType as conflict_type, reviewType as review_type, reviewSubmitted as review_submitted, reviewNeedsSubmit as review_needs_submit, PaperReview.contactId as review_token_cid, ContactInfo.contactId from (select ? paperId) P join ContactInfo left join PaperReview on (PaperReview.paperId=? and PaperReview.contactId=ContactInfo.contactId) left join PaperConflict on (PaperConflict.paperId=? and PaperConflict.contactId=ContactInfo.contactId) where (roles&1)!=0"; *)
-  (* "select Paper.*, PaperConflict.conflictType, null reviewType, null reviewId, null myReviewType, (select group_concat(topicId) from PaperTopic where PaperTopic.paperId=Paper.paperId) topicIds, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds from Paper left join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=0) where Paper.paperId=? group by Paper.paperId order by Paper.paperId"; *)
-  (* "select conflictType as conflict_type, reviewType as review_type, reviewSubmitted as review_submitted, reviewNeedsSubmit as review_needs_submit, PaperReview.contactId as review_token_cid, ContactInfo.contactId from (select ? paperId) P join ContactInfo left join PaperReview on (PaperReview.paperId=? and PaperReview.contactId=ContactInfo.contactId) left join PaperConflict on (PaperConflict.paperId=? and PaperConflict.contactId=ContactInfo.contactId) where roles!=0 and (roles&1)!=0"; *)
-  (* "select conflictType as conflict_type, reviewType as review_type, reviewSubmitted as review_submitted, reviewNeedsSubmit as review_needs_submit, PaperReview.contactId as review_token_cid, ContactInfo.contactId from (select 1 paperId) P join ContactInfo left join PaperReview on (PaperReview.paperId=? and PaperReview.contactId=ContactInfo.contactId) left join PaperConflict on (PaperConflict.paperId=? and PaperConflict.contactId=ContactInfo.contactId) where roles!=0 and (roles&1)!=0"; *)
+(* "select paperId from PaperReview where reviewType>? and timeRequested>timeRequestNotified and reviewSubmitted is null and reviewNeedsSubmit!=0 limit 1"; *)
+(* "select (select max(conflictType) from PaperConflict where contactId=?), (select paperId from PaperReview where contactId=? or reviewToken in ? limit 1)"; *)
+(* "select min(Paper.paperId) from Paper join ContactInfo on (ContactInfo.paperId=Paper.paperId and ContactInfo.contactId=? and ContactInfo.conflictType>=?)"; *)
+(* "select min(Paper.paperId) from Paper join ContactInfo on (ContactInfo.paperId=Paper.paperId and ContactInfo.contactId=0 and ContactInfo.conflictType>=?)"; *)
+(* "select r.reviewId from PaperReview r join Paper p on (p.paperId=r.paperId and p.timeSubmitted>0) where (r.contactId=?) and r.reviewNeedsSubmit!=0 limit 1"; *)
+(* "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome from Paper where true group by Paper.paperId"; *)
+(* "select PaperStorage.* from FilteredDocument join PaperStorage on (PaperStorage.paperStorageId=FilteredDocument.outDocId) where inDocId=? and FilteredDocument.filterType=?"; *)
+(* "select ContactInfo.contactId, conflictType, email, firstName, lastName, affiliation from PaperConflict join ContactInfo using (contactId) where paperId=? and conflictType>=?"; *)
+(* "select Paper.paperId, authorInformation from Paper join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=? and PaperConflict.conflictType>=?)"; *)
+(* "select paperStorageId, paperId, timestamp, mimetype, mimetypeid, sha1, documentType, filename, infoJson, size, filterType, originalStorageId from PaperStorage where paperStorageId in ?"; *)
+(* "select PaperReview.contactId, timeRequested, reviewSubmitted, reviewRound, 0 conflictType from PaperReview where reviewType>? or (reviewType=? and timeRequested>0 and reviewSubmitted>0)"; *)
+(* "select rating, count(PaperReview.reviewId) from PaperReview join ReviewRating on (PaperReview.contactId=? and PaperReview.reviewId=ReviewRating.reviewId) group by rating order by rating desc"; *)
+(* "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome from Paper where true and Paper.timeSubmitted>0 group by Paper.paperId"; *)
+(* "select paperStorageId, paperId, timestamp, mimetype, mimetypeid, sha1, documentType, filename, infoJson, size, filterType, originalStorageId from PaperStorage where paperId=? and paperStorageId in ?"; *)
+(* "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome from Paper where (Paper.paperId in (?)) and Paper.timeSubmitted>0 group by Paper.paperId"; *)
+(* "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome from Paper where (Paper.outcome in (?)) and Paper.timeSubmitted>0 group by Paper.paperId"; *)
+(* "select PaperComment.*, firstName reviewFirstName, lastName reviewLastName, email reviewEmail from PaperComment join ContactInfo on (ContactInfo.contactId=PaperComment.contactId) where commentId=? order by commentId"; *)
+(* "select PaperReview.*, ContactInfo.firstName, ContactInfo.lastName, ContactInfo.email from PaperReview join ContactInfo on (ContactInfo.contactId=PaperReview.contactId) where PaperReview.paperId=? order by reviewOrdinal"; *)
+(* "select distinct tag from PaperTag t join Paper p on (p.paperId=t.paperId) left join PaperConflict pc on (pc.paperId=t.paperId and pc.contactId=?) where p.timeSubmitted>0 and (p.managerContactId=? or pc.conflictType is null)"; *)
+(* "select PaperComment.*, firstName reviewFirstName, lastName reviewLastName, email reviewEmail from PaperComment join ContactInfo on (ContactInfo.contactId=PaperComment.contactId) where PaperComment.paperId=? order by commentId"; *)
+(* "select u.contactId, firstName, lastName, email, affiliation, roles, contactTags, voicePhoneNumber, u.collaborators, lastLogin, disabled from ContactInfo u where u.roles!=0 and (u.roles&1)!=0 order by lastName, firstName, email"; *)
+(* "select ContactInfo.contactId, count(reviewId) from ContactInfo left join PaperReview on (PaperReview.contactId=ContactInfo.contactId and PaperReview.reviewType>=?) where roles!=0 and (roles&1)!=0 group by ContactInfo.contactId"; *)
+(* "select ContactInfo.contactDbId, Conferences.confid, roles, password from ContactInfo left join Conferences on (Conferences.`dbname`=?) left join Roles on (Roles.contactDbId=ContactInfo.contactDbId and Roles.confid=Conferences.confid) where email=?"; *)
+(*   "select u.contactId, firstName, lastName, email, affiliation, roles, contactTags, voicePhoneNumber, u.collaborators, lastLogin, disabled from ContactInfo u where u.roles!=0 and (u.roles&1)!=0 group by u.contactId order by lastName, firstName, email"; *)
+(*   "select distinct tag from PaperTag t join Paper p on (p.paperId=t.paperId) left join PaperConflict pc on (pc.paperId=t.paperId and pc.contactId=?) where p.timeSubmitted>0 and (p.managerContactId=0 or p.managerContactId=? or pc.conflictType is null)"; *)
+(*   "select count(reviewId) num_submitted, group_concat(overAllMerit) scores from ContactInfo left join PaperReview on (PaperReview.contactId=ContactInfo.contactId and PaperReview.reviewSubmitted is not null) where (roles&1)!=0 group by ContactInfo.contactId"; *)
+(*   "select ContactInfo.contactId, firstName, lastName, email, preferredEmail, password, roles, disabled, contactTags, conflictType, 0 myReviewType from ContactInfo join PaperConflict using (contactId) where paperId=? and conflictType>=? group by ContactInfo.contactId"; *)
+(*   "select Paper.paperId, count(pc.contactId) from Paper join PaperConflict c on (c.paperId=Paper.paperId and c.contactId=? and c.conflictType>=?) join PaperConflict pc on (pc.paperId=Paper.paperId and pc.conflictType>=?) group by Paper.paperId order by Paper.paperId"; *)
+(*   "select count(reviewId) num_submitted, group_concat(overAllMerit) scores from ContactInfo left join PaperReview on (PaperReview.contactId=ContactInfo.contactId and PaperReview.reviewSubmitted is not null) where roles!=0 and (roles&1)!=0 group by ContactInfo.contactId"; *)
+(*   "select Paper.*, PaperConflict.conflictType, null reviewType, null reviewId, null myReviewType from Paper left join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=0) where Paper.paperId=? group by Paper.paperId order by Paper.paperId"; *)
+(*   "select name, ReviewRequest.email, firstName as reqFirstName, lastName as reqLastName, ContactInfo.email as reqEmail, requestedBy, reason, reviewRound from ReviewRequest join ContactInfo on (ContactInfo.contactId=ReviewRequest.requestedBy) where ReviewRequest.paperId=?"; *)
+(*   "select u.contactId, group_concat(r.reviewType separator '') from ContactInfo u left join PaperReview r on (r.contactId=u.contactId) left join Paper p on (p.paperId=r.paperId) where p.timeWithdrawn<=0 and p.timeSubmitted>0 and u.roles!=0 and (u.roles&1)!=0 group by u.contactId"; *)
+(*   "select name, ReviewRequest.email, firstName as reqFirstName, lastName as reqLastName, ContactInfo.email as reqEmail, requestedBy, reason, reviewRound from ReviewRequest join ContactInfo on (ContactInfo.contactId=ReviewRequest.requestedBy) where ReviewRequest.paperId=? and requestedBy=?"; *)
+(*   "select u.contactId, firstName, lastName, email, affiliation, roles, contactTags, voicePhoneNumber, u.collaborators, lastLogin, disabled, (select group_concat(paperId) from PaperConflict where contactId=u.contactId and conflictType>=?) paperIds from ContactInfo u group by u.contactId order by lastName, firstName, email"; *)
+(*   "select Paper.paperId, reviewId, reviewType, reviewSubmitted, reviewModified, timeApprovalRequested, reviewNeedsSubmit, reviewRound, reviewOrdinal, timeRequested, PaperReview.contactId, lastName, firstName, email from Paper join PaperReview using (paperId) join ContactInfo on (PaperReview.contactId=ContactInfo.contactId) where paperId in ?"; *)
+(*   "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome, PaperConflict.conflictType conflictType from Paper left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId and (PaperConflict.contactId=?)) where true and PaperConflict.conflictType>=? group by Paper.paperId"; *)
+(*   "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome, PaperConflict.conflictType conflictType from Paper left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId and (PaperConflict.contactId=0)) where true and PaperConflict.conflictType>=? group by Paper.paperId"; *)
+(*   "select ContactInfo.contactId, PaperConflict.conflictType, reviewType, reviewModified, reviewId from ContactInfo left join PaperConflict on (PaperConflict.contactId=ContactInfo.contactId and PaperConflict.paperId=?) left join PaperReview on (PaperReview.contactId=ContactInfo.contactId and PaperReview.paperId=?) where ContactInfo.roles!=0 and (ContactInfo.roles&1)!=0"; *)
+(*   "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome, PaperConflict.conflictType conflictType from Paper left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId and (PaperConflict.contactId=0)) where true and (PaperConflict.conflictType>=? or Paper.paperId=?) group by Paper.paperId"; *)
+(*   "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome, PaperConflict.conflictType conflictType from Paper left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId and (PaperConflict.contactId=?)) where true and (PaperConflict.conflictType>=? or Paper.paperId=?) group by Paper.paperId"; *)
+(*   "select Paper.*, PaperConflict.conflictType, null reviewType, null reviewId, null myReviewType, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds from Paper left join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=0) where Paper.paperId=? group by Paper.paperId order by Paper.paperId"; *)
+(*   "select PRP.paperId, PRP.contactId, PRP.preference from PaperReviewPreference PRP join ContactInfo c on (c.contactId=PRP.contactId and c.roles!=0 and (c.roles&1)!=0) join Paper P on (P.paperId=PRP.paperId) left join PaperConflict PC on (PC.paperId=PRP.paperId and PC.contactId=PRP.contactId) where PRP.preference<=? and coalesce(PC.conflictType,0)<=0 and P.timeWithdrawn<=0 limit 1"; *)
+(*   "select Paper.*, PaperConflict.conflictType, null reviewType, null reviewId, null myReviewType, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds from Paper left join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=0) where Paper.paperId in (?) group by Paper.paperId order by Paper.paperId"; *)
+(*   "select Paper.*, PaperConflict.conflictType, null reviewType, null reviewId, null myReviewType, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds from Paper join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=? and PaperConflict.conflictType>=?) group by Paper.paperId order by Paper.paperId"; *)
+(*   "select PRP.paperId, PRP.contactId, PRP.preference from PaperReviewPreference PRP join ContactInfo c on (c.contactId=PRP.contactId and (c.roles&1)!=0) join Paper P on (P.paperId=PRP.paperId) left join PaperConflict PC on (PC.paperId=PRP.paperId and PC.contactId=PRP.contactId) where PRP.preference<=? and coalesce(PC.conflictType,0)<=0 and P.timeWithdrawn<=0 and P.timeSubmitted>0 limit 1"; *)
+(*   "select conflictType as conflict_type, reviewType as review_type, reviewSubmitted as review_submitted, reviewNeedsSubmit as review_needs_submit, PaperReview.contactId as review_token_cid, ? contactId from (select ? paperId) P left join PaperReview on (PaperReview.paperId=P.paperId and (PaperReview.contactId=?)) left join PaperConflict on (PaperConflict.paperId=? and PaperConflict.contactId=?)"; *)
+(*   "select conflictType as conflict_type, reviewType as review_type, reviewSubmitted as review_submitted, reviewNeedsSubmit as review_needs_submit, PaperReview.contactId as review_token_cid, ? contactId from (select 1 paperId) P left join PaperReview on (PaperReview.paperId=P.paperId and (PaperReview.contactId=?)) left join PaperConflict on (PaperConflict.paperId=? and PaperConflict.contactId=?)"; *)
+(*   "select Paper.paperId paperId, Paper.timeSubmitted timeSubmitted, Paper.timeWithdrawn timeWithdrawn, Paper.outcome outcome, PaperConflict.conflictType conflictType from Paper left join PaperConflict as PaperConflict on (PaperConflict.paperId=Paper.paperId and (PaperConflict.contactId=?)) where true and (PaperConflict.conflictType>=? or Paper.paperId=? or Paper.paperId=?) group by Paper.paperId"; *)
+(*   "select PRP.paperId, PRP.contactId, PRP.preference from PaperReviewPreference PRP join ContactInfo c on (c.contactId=PRP.contactId and c.roles!=0 and (c.roles&1)!=0) join Paper P on (P.paperId=PRP.paperId) left join PaperConflict PC on (PC.paperId=PRP.paperId and PC.contactId=PRP.contactId) where PRP.preference<=? and coalesce(PC.conflictType,0)<=0 and P.timeWithdrawn<=0 and P.timeSubmitted>0 limit 1"; *)
+(*   "select MPR.reviewId from PaperReview as MPR left join (select paperId, count(reviewId) as numReviews from PaperReview where reviewType>1 and reviewNeedsSubmit=0 group by paperId) as NPR on (NPR.paperId=MPR.paperId) left join (select paperId, count(rating) as numRatings from PaperReview join ReviewRating using (paperId,reviewId) group by paperId) as NRR on (NRR.paperId=MPR.paperId) where MPR.contactId=? and numReviews<=? and numRatings<=?"; *)
+(*   "select count(reviewSubmitted) num_submitted, count(if(reviewNeedsSubmit=0,reviewSubmitted,1)) num_needs_submit, group_concat(if(reviewSubmitted is not null,overAllMerit,null)) scores, group_concat(distinct if(reviewNeedsSubmit!=0 and reviewSubmitted is null,reviewRound,null)) unsubmitted_rounds from PaperReview join Paper using (paperId) where (PaperReview.contactId=?) and (reviewSubmitted is not null or timeSubmitted>0) group by PaperReview.reviewId>0"; *)
+(*   "select any_newpcrev, any_lead, any_shepherd from (select PaperReview.paperId any_newpcrev from PaperReview where reviewType>=? and reviewSubmitted is null and reviewNeedsSubmit!=0 and timeRequested>timeRequestNotified limit 1) a left join (select paperId any_lead from Paper where timeSubmitted>0 and leadContactId!=0 limit 1) b on (true) left join (select paperId any_shepherd from Paper where timeSubmitted>0 and shepherdContactId!=0 limit 1) c on (true)"; *)
+(*   "select p.paperId, pt.paperTags, r.reviewType from Paper p left join (select paperId, group_concat(' ', tag, '#', tagIndex order by tag separator '') as paperTags from PaperTag where tag  in ? group by paperId) as pt on (pt.paperId=p.paperId) left join PaperReview r on (r.paperId=p.paperId and r.contactId=?) left join PaperConflict pc on (pc.paperId=p.paperId and pc.contactId=?) where p.timeSubmitted>0 and (pc.conflictType is null or p.managerContactId=?)"; *)
+(* "select conflictType as conflict_type, reviewType as review_type, reviewSubmitted as review_submitted, reviewNeedsSubmit as review_needs_submit, PaperReview.contactId as review_token_cid, ContactInfo.contactId from (select ? paperId) P join ContactInfo left join PaperReview on (PaperReview.paperId=? and PaperReview.contactId=ContactInfo.contactId) left join PaperConflict on (PaperConflict.paperId=? and PaperConflict.contactId=ContactInfo.contactId) where (roles&1)!=0"; *)
+(* "select Paper.*, PaperConflict.conflictType, null reviewType, null reviewId, null myReviewType, (select group_concat(topicId) from PaperTopic where PaperTopic.paperId=Paper.paperId) topicIds, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds from Paper left join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=0) where Paper.paperId=? group by Paper.paperId order by Paper.paperId"; *)
+(* "select conflictType as conflict_type, reviewType as review_type, reviewSubmitted as review_submitted, reviewNeedsSubmit as review_needs_submit, PaperReview.contactId as review_token_cid, ContactInfo.contactId from (select ? paperId) P join ContactInfo left join PaperReview on (PaperReview.paperId=? and PaperReview.contactId=ContactInfo.contactId) left join PaperConflict on (PaperConflict.paperId=? and PaperConflict.contactId=ContactInfo.contactId) where roles!=0 and (roles&1)!=0"; *)
+(* "select conflictType as conflict_type, reviewType as review_type, reviewSubmitted as review_submitted, reviewNeedsSubmit as review_needs_submit, PaperReview.contactId as review_token_cid, ContactInfo.contactId from (select 1 paperId) P join ContactInfo left join PaperReview on (PaperReview.paperId=? and PaperReview.contactId=ContactInfo.contactId) left join PaperConflict on (PaperConflict.paperId=? and PaperConflict.contactId=ContactInfo.contactId) where roles!=0 and (roles&1)!=0"; *)
 (* "select PaperReview.*, ContactInfo.firstName, ContactInfo.lastName, ContactInfo.email, ContactInfo.roles as contactRoles, ContactInfo.contactTags, ReqCI.firstName as reqFirstName, ReqCI.lastName as reqLastName, ReqCI.email as reqEmail from PaperReview join ContactInfo using (contactId) left join ContactInfo as ReqCI on (ReqCI.contactId=PaperReview.requestedBy) where PaperReview.paperId=? group by PaperReview.reviewId order by PaperReview.paperId, reviewOrdinal, timeRequested, reviewType desc, reviewId"; *)
 (* "select ContactInfo.contactId, reviewType, commentId, conflictType, watch from ContactInfo left join PaperReview on (PaperReview.paperId=? and PaperReview.contactId=ContactInfo.contactId) left join PaperComment on (PaperComment.paperId=? and PaperComment.contactId=ContactInfo.contactId) left join PaperConflict on (PaperConflict.paperId=? and PaperConflict.contactId=ContactInfo.contactId) left join PaperWatch on (PaperWatch.paperId=? and PaperWatch.contactId=ContactInfo.contactId) where ContactInfo.contactId=?"; *)
 (* "select Paper.*, PaperConflict.conflictType, null reviewType, null reviewId, null myReviewType, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds, (select group_concat(' ', tag, '#', tagIndex order by tag separator '') from PaperTag where PaperTag.paperId=Paper.paperId) paperTags from Paper join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=? and PaperConflict.conflictType>=?) group by Paper.paperId order by Paper.paperId"; *)
@@ -515,92 +515,7 @@ let queries = [
 (* "select Paper.*, PaperConflict.conflictType, (select count(*) from PaperReview where paperId=Paper.paperId and (reviewSubmitted>0 or reviewNeedsSubmit>0)) startedReviewCount, (select count(*) from PaperReview where paperId=Paper.paperId and (reviewSubmitted>0 or reviewModified>0)) inProgressReviewCount, coalesce(R_submitted.count,0) reviewCount, R_submitted.overAllMeritScores, PaperReview.overAllMerit, R_submitted.reviewContactIds, PaperReview.reviewType, PaperReview.reviewId, PaperReview.reviewModified, PaperReview.reviewSubmitted, PaperReview.timeApprovalRequested, PaperReview.reviewNeedsSubmit, PaperReview.reviewOrdinal, PaperReview.reviewBlind, PaperReview.reviewToken, PaperReview.timeRequested, PaperReview.contactId as reviewContactId, PaperReview.requestedBy, max(PaperReview.reviewType) as myReviewType, max(PaperReview.reviewSubmitted) as myReviewSubmitted, min(PaperReview.reviewNeedsSubmit) as myReviewNeedsSubmit, PaperReview.contactId as myReviewContactId, PaperReview.reviewRound, PaperReview.reviewEditVersion as reviewEditVersion, PaperReview.reviewFormat as reviewFormat, PaperReview.overAllMerit as overAllMerit, PaperReview.reviewerQualification as reviewerQualification, PaperReview.paperSummary as paperSummary, PaperReview.commentsToAddress as commentsToAddress, PaperReview.strengthOfPaper as strengthOfPaper, PaperReview.commentsToAuthor as commentsToAuthor, PaperReview.commentsToPC as commentsToPC, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds, (select group_concat(' ', tag, '#', tagIndex order by tag separator '') from PaperTag where PaperTag.paperId=Paper.paperId) paperTags from Paper left join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=?) join PaperReview on (PaperReview.paperId=Paper.paperId and PaperReview.contactId=?) left join (select paperId, count(*) count, group_concat(overAllMerit order by reviewId) overAllMeritScores, group_concat(contactId order by reviewId) reviewContactIds from PaperReview where reviewSubmitted>0 group by paperId) R_submitted on (R_submitted.paperId=Paper.paperId) where timeWithdrawn<=0 group by Paper.paperId, PaperReview.reviewId order by Paper.paperId, PaperReview.reviewOrdinal"; *)
 (* "select Paper.*, PaperConflict.conflictType, (select count(*) from PaperReview where paperId=Paper.paperId and (reviewSubmitted>0 or reviewNeedsSubmit>0)) startedReviewCount, (select count(*) from PaperReview where paperId=Paper.paperId and (reviewSubmitted>0 or reviewModified>0)) inProgressReviewCount, coalesce(R_submitted.count,0) reviewCount, R_submitted.overAllMeritScores, PaperReview.overAllMerit, R_submitted.reviewerQualificationScores, PaperReview.reviewerQualification, R_submitted.reviewContactIds, PaperReview.reviewType, PaperReview.reviewId, PaperReview.reviewModified, PaperReview.reviewSubmitted, PaperReview.timeApprovalRequested, PaperReview.reviewNeedsSubmit, PaperReview.reviewOrdinal, PaperReview.reviewBlind, PaperReview.reviewToken, PaperReview.timeRequested, PaperReview.contactId as reviewContactId, PaperReview.requestedBy, max(PaperReview.reviewType) as myReviewType, max(PaperReview.reviewSubmitted) as myReviewSubmitted, min(PaperReview.reviewNeedsSubmit) as myReviewNeedsSubmit, PaperReview.contactId as myReviewContactId, PaperReview.reviewRound, PaperReview.reviewEditVersion as reviewEditVersion, PaperReview.reviewFormat as reviewFormat, PaperReview.overAllMerit as overAllMerit, PaperReview.reviewerQualification as reviewerQualification, PaperReview.paperSummary as paperSummary, PaperReview.commentsToAddress as commentsToAddress, PaperReview.strengthOfPaper as strengthOfPaper, PaperReview.commentsToAuthor as commentsToAuthor, PaperReview.commentsToPC as commentsToPC, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds, (select group_concat(' ', tag, '#', tagIndex order by tag separator '') from PaperTag where PaperTag.paperId=Paper.paperId) paperTags from Paper left join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=?) join PaperReview on (PaperReview.paperId=Paper.paperId and PaperReview.contactId=?) left join (select paperId, count(*) count, group_concat(overAllMerit order by reviewId) overAllMeritScores, group_concat(reviewerQualification order by reviewId) reviewerQualificationScores, group_concat(contactId order by reviewId) reviewContactIds from PaperReview where reviewSubmitted>0 group by paperId) R_submitted on (R_submitted.paperId=Paper.paperId) where timeWithdrawn<=0 group by Paper.paperId, PaperReview.reviewId order by Paper.paperId, PaperReview.reviewOrdinal"; *)
 (* "select Paper.*, PaperConflict.conflictType, R_submitted.overAllMeritScores, PaperReview.overAllMerit, R_submitted.reviewContactIds, PaperReview.reviewType, PaperReview.reviewId, PaperReview.reviewModified, PaperReview.reviewSubmitted, PaperReview.timeApprovalRequested, PaperReview.reviewNeedsSubmit, PaperReview.reviewOrdinal, PaperReview.reviewBlind, PaperReview.reviewToken, PaperReview.timeRequested, PaperReview.contactId as reviewContactId, PaperReview.requestedBy, max(PaperReview.reviewType) as myReviewType, max(PaperReview.reviewSubmitted) as myReviewSubmitted, min(PaperReview.reviewNeedsSubmit) as myReviewNeedsSubmit, PaperReview.contactId as myReviewContactId, PaperReview.reviewRound, (select group_concat(topicId) from PaperTopic where PaperTopic.paperId=Paper.paperId) topicIds, (select group_concat(PaperOption.optionId, '#', value) from PaperOption where paperId=Paper.paperId) optionIds, (select group_concat(' ', tag, '#', tagIndex order by tag separator '') from PaperTag where PaperTag.paperId=Paper.paperId) paperTags, coalesce(PaperReviewPreference.preference, 0) as reviewerPreference, PaperReviewPreference.expertise as reviewerExpertise, APRP.allReviewerPreference, coalesce(APRP.desirability,0) as desirability, AllConflict.allConflictType, RPC.conflictType reviewerConflictType, RPR.reviewType reviewerReviewType from Paper left join PaperConflict on (PaperConflict.paperId=Paper.paperId and PaperConflict.contactId=?) left join PaperReview on (PaperReview.paperId=Paper.paperId and PaperReview.contactId=?) left join (select paperId, count(*) count, group_concat(overAllMerit order by reviewId) overAllMeritScores, group_concat(contactId order by reviewId) reviewContactIds from PaperReview where reviewSubmitted>0 group by paperId) R_submitted on (R_submitted.paperId=Paper.paperId) left join PaperReviewPreference on (PaperReviewPreference.paperId=Paper.paperId and PaperReviewPreference.contactId=?) left join (select paperId, group_concat(concat(contactId,' ',preference,' ',coalesce(expertise,?)) separator ?) as allReviewerPreference, sum(if(preference<=?,0,greatest(least(preference,1),-1))) as desirability from PaperReviewPreference where true group by paperId) as APRP on (APRP.paperId=Paper.paperId) left join (select paperId, group_concat(concat(contactId,' ',conflictType) separator ?) as allConflictType from PaperConflict where conflictType>0 group by paperId) as AllConflict on (AllConflict.paperId=Paper.paperId) left join PaperConflict RPC on (RPC.paperId=Paper.paperId and RPC.contactId=?) left join PaperReview RPR on (RPR.paperId=Paper.paperId and RPR.contactId=?) where timeSubmitted>0 group by Paper.paperId order by Paper.paperId" *)]
-(*
-let queries = [
-  "select topicId, interest from TopicInterest where contactId=? and interest!=0";
-  "select topicId from TopicInterest where contactId=? and interest!=0"
-]*)
-
-let db = new_database ()
 
 let _ =
-  add_table db "Article" ["id"; "title"; "body"; "ts"];
-  add_table db "Vote" ["user"; "id"; "ts"]
-
-let queries = [
-  "SELECT id, title, body, ts FROM Article LEFT JOIN (
-      SELECT COUNT(user) FROM Vote GROUP BY user
-    ) as VoteCount ON Article.id = Vote.id
-    WHERE id = ?";
-  "SELECT id, title, body, ts FROM Article LEFT JOIN (
-      SELECT COUNT(user) as votes FROM Vote GROUP BY user
-    ) as VoteCount ON Article.id = Vote.id
-    WHERE ts < ?";
-  "SELECT COUNT(user) FROM Vote WHERE id = ?";
-  "SELECT user, id, ts FROM Vote WHERE id = ? AND user = ?"
-]
-
-let parse_sql query = (Sql_parser.query Sql_lexer.lex (Lexing.from_string query))
-
-let pieces = Hashtbl.create 2048
-let count = ref 0
-let new_int () =
-  let c = !count in
-  count := !count + 1;
-  c
-
-let rec add_query q =
-  if not (Hashtbl.mem pieces q) then (
-    let n = new_int () in
-    Hashtbl.add pieces q n;
-    add_table db (Printf.sprintf "query-%d" n) ["(auto-generated)"]);
-  match q with
-    | Table (name, cs) -> ()
-    | Select (_, q) -> add_query q
-    | Project (_, q) -> add_query q
-    | Union (q1, q2) -> add_query q1; add_query q2
-    | Join (_, q1, q2) -> add_query q1; add_query q2
-    | Group (_, _, q) -> add_query q
-
-(* let rec count_ops q =
-  match q with
-    | Table t -> 0
-    | Select (_, q) -> 1 + (count_ops q)
-    | Project (_, q) -> 1 + (count_ops q)
-    | Union (q1, q2) -> 1 + (count_ops q1) + (count_ops q2)
-    | Join (_, q1, q2) -> 1 + (count_ops q1) + (count_ops q2)
-    | Group (_, _, q) -> 1 + (count_ops q)
-
-let count_all_ops qs =
-  List.fold_left (fun memo q -> count_ops q + memo) 0 qs
-
-let count_pieces_ops () =
-  Hashtbl.fold (fun k _ memo -> count_ops k + memo) pieces 0
- *)
-let exists q =
-  if Hashtbl.mem pieces q
-  then Table (Printf.sprintf "query-%d" (Hashtbl.find pieces q))
-  else q
-
-let rec minimize q =
-  match q with
-    | Table _ as t -> t
-    | Select (e, q) -> Select (e, exists q)
-    | Project (ps, q) -> Project (ps, exists q)
-    | Union (q1, q2) -> Union (exists q1, exists q2)
-    | Join (e, q1, q2) -> Join (e, exists q1, exists q2)
-    | Group (aggs, cs, q) -> Group (aggs, cs, exists q)
-
-let _ =
-  let sqls = List.map parse_sql queries in
-  let algebras = List.map algebra_of_sql sqls in
-  List.iter add_query algebras;
-  List.iter (fun q ->
-    let sql = parse_sql q in
-    let algebra = algebra_of_sql sql in
-    print_endline q;
-    print_endline (string_of_query db algebra);
-    print_endline (string_of_query db (minimize algebra));
-    print_endline "\n\n"
-  ) queries;
-
+  List.iteri (fun i q -> add_external_sql db (Printf.sprintf "external-%d" i) q) queries;
+  Soup.do_magic db
